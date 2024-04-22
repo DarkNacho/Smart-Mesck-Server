@@ -1,38 +1,28 @@
-from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import Session
-import uvicorn
+
 import asyncio
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, WebSocketException,status
 import json
 
-from database import get_session
-from models import User
-from sensor import router as sensor_router
+from jose import JWTError
 
 
-from auth import router as auth_router, isAuthorized
+from auth import decode_token
 
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Puedes ajustar esto según tus necesidades de seguridad
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(auth_router)
-app.include_router(sensor_router)
+router = APIRouter(prefix="/sensor", tags=["sensor"])
 
 arduino_clients = set()
 dashboard_clients = set()
 
 
-
-
-@app.websocket("/arduino_ws")
-async def arduino_websocket(websocket: WebSocket, payload = Depends(isAuthorized)):
+@router.websocket("/arduino_ws")
+async def arduino_websocket(websocket: WebSocket, token : str):
+    try:
+        payload = await decode_token(token)
+        print("payload:", payload)
+        print("token:", token)
+    except JWTError:
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token")
+        
     await websocket.accept()
     arduino_clients.add(websocket)
     print(f"Arduino connected: {websocket.client.host}")
@@ -56,8 +46,11 @@ async def arduino_websocket(websocket: WebSocket, payload = Depends(isAuthorized
     finally:
         arduino_clients.remove(websocket)
         print(f"Arduino disconnected: {websocket.client.host}")
-
-@app.websocket("/dashboard_ws")
+        
+        
+        
+        
+@router.websocket("/dashboard_ws")
 async def dashboard_websocket(websocket: WebSocket):
     await websocket.accept()
     dashboard_clients.add(websocket)
@@ -76,17 +69,3 @@ async def dashboard_websocket(websocket: WebSocket):
         dashboard_clients.remove(websocket)
         print(f"Dashboard disconnected: {websocket.client.host}")
 
-
-@app.get("/test")
-async def test(payload = Depends(isAuthorized)):
-    return {"payload": payload}
-
-@app.post("/register_user")
-async def send_data(data: User, db: Session = Depends(get_session)):
-    print(data)
-    db.add(data)
-    db.commit()
-    
-    
-if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=8000)

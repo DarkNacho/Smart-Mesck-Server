@@ -4,6 +4,8 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.utils import COMMASPACE
 from email import encoders
+import os
+from dotenv import load_dotenv
 
 class Message:
     def __init__(self, sender : str, recipients: list[str], subject: str):
@@ -37,7 +39,6 @@ class Message:
         self.msg['Subject'] = self.subject
         return self.msg
 
-
 class EmailService:
     def __init__(self, smtp_server:str, port:int, username:str, password:str):
         self.smtp_server = smtp_server
@@ -55,24 +56,26 @@ class EmailService:
         server.quit()
         
         
-        
-NAME="Taryn Volkman"
-USER="taryn.volkman66@ethereal.email"
-PASS="wnQ2QmavuSdNcVWS5g"
-HOST="smtp.ethereal.email"
-PORT=587
+load_dotenv()
+NAME = os.getenv("NAME")
+USER = os.getenv("USER")
+PASS = os.getenv("PASS")
+HOST = os.getenv("HOST")
+PORT = int(os.getenv("PORT"))
 
 
-async def send_email(recipients: list[str] , subject: str, body):
+
+def send_email(recipients: list[str] , subject: str, body):
     msg = Message(sender=USER, recipients=recipients, subject=subject)
     msg.set_body(body)
     mail_service = EmailService(HOST, PORT, USER, PASS)
-    await mail_service.send_mail(msg)
+    mail_service.send_mail(msg)
 
 
 if __name__ == "__main__":
-    msg = Message(sender=USER, recipients=["destinatario@example.com", "nacho@nacho.cl"], subject="¡Hola!")
-    msg.set_body("Este es un correo de prueba.")
+    send_email(["nacho@nacho.cl"], "prueba", "hola mundo")
+    #msg = Message(sender=USER, recipients=["destinatario@example.com", "nacho@nacho.cl"], subject="¡Hola!")
+    #msg.set_body("Este es un correo de prueba.")
 
-    mail_service = EmailService(HOST, PORT, USER, PASS)
-    mail_service.send_mail(msg)
+    #mail_service = EmailService(HOST, PORT, USER, PASS)
+    #mail_service.send_mail(msg)
