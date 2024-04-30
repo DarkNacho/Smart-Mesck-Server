@@ -1,7 +1,7 @@
 from datetime import timedelta
 import time
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Form, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from typing import Annotated
@@ -50,7 +50,9 @@ async def register(user: User, db: db_dependency):
     db.commit()
     db.refresh(newUser)
     token = generate_restart_token(newUser)
-    send_email([newUser.email], "Confirm your email", f"Click here to confirm your email: http://localhost:8000/auth/activate/{token}")
+    smart_mesck_url = os.getenv("SMART_MESCK_URL")
+    msg = f"Haz sido registrado en Smart-Mesck, haz click <a href='{smart_mesck_url}/?token={token}'>aquí</a> para completar tu registro"
+    send_email([newUser.email], "Confirma tu cuenta", msg)
     
 @router.post("/token", response_model=Token)
 async def login(db: db_dependency, form_data: OAuth2PasswordRequestForm = Depends()):
@@ -76,7 +78,7 @@ async def activate_user(token: str, db: db_dependency):
         return {"error": "Invalid token"}
     
     
-@router.post("/reset-password-token")
+@router.post("/generate-reset-password-token")
 async def create_reset_password_token(email: str, db: db_dependency):
     user = db.query(User).filter(User.email == email).first()
     if not user:
@@ -87,12 +89,13 @@ async def create_reset_password_token(email: str, db: db_dependency):
     
     return {"message": "Reset password token created successfully"}
 
-@router.post("/reset-password/{token}")
-async def reset_password(token: str, new_password: str, db: db_dependency):
+@router.post("/reset-password")
+async def reset_password(db: db_dependency, token: str = Form(...), new_password: str = Form(...)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("id")
         user : User = db.query(User).filter(User.id == user_id).first()
+        user.validate = True
         if not user:
             return {"error": "Invalid token"}
         user.hash_password = bcrypt_context.hash(new_password)

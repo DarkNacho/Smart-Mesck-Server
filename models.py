@@ -10,12 +10,13 @@ class Token(BaseModel):
     
 class User(SQLModel, table=True):
     id: str = Field(default=None, primary_key=True)
-    email: str = Field(unique=True, index=True)
     rut: str = Field(unique=True, index=True)
     hash_password: str
-    phone_number: str = Field(unique=True, index=True)
-    validate : bool = False
     role: str = Field(index=True)
+    email: str = Field(index=True)
+    phone_number: str = Field(index=True)
+    validate : bool = False
+
 
     def to_dict(self):
         return self.to_dict(exclude={"hash_password"})

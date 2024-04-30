@@ -15,7 +15,7 @@ class Message:
         self.msg = MIMEMultipart()
 
     def set_body(self, body):
-        self.msg.attach(MIMEText(body))
+        self.msg.attach(MIMEText(body, 'html'))
 
     def add_attachment(self, filename, attachment_stream):
         part = MIMEBase('application', 'octet-stream')
@@ -73,7 +73,12 @@ def send_email(recipients: list[str] , subject: str, body):
 
 
 if __name__ == "__main__":
-    send_email(["nacho@nacho.cl"], "prueba", "hola mundo")
+    
+    smart_mesck_url = os.getenv("SMART_MESCK_URL")
+    msg = f"Haz sido registrado en Smart-Mesck, haz click <a href='{smart_mesck_url}/?token=token va aqui'>aquí</a> para completar tu registro"
+    send_email("prueba122@nacho.cl", "Confirma tu cuenta", msg)
+
+    #send_email(["nacho@nacho.cl"], "prueba", "hola mundo")
     #msg = Message(sender=USER, recipients=["destinatario@example.com", "nacho@nacho.cl"], subject="¡Hola!")
     #msg.set_body("Este es un correo de prueba.")
 
