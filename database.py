@@ -25,17 +25,20 @@ def get_session():
 if __name__ == "__main__":
     from models import User, SensorData
     from passlib.context import CryptContext
-
+    
+    if os.path.exists(DB_FILE):
+        os.remove(DB_FILE)
+        
     create_database()
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = SessionLocal()
     bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     user_nacho = User(email="dark_nacho_xd@hotmail.cl",
-                      id="4", phone_number="+56912345678", 
+                      id="1", phone_number="+56912345678", 
                       rut="198625388", validate=True,
-                      hash_password=bcrypt_context.hash("nacho12345"),
-                      role="Patient")
+                      hash_password=bcrypt_context.hash("nacho"),
+                      role="Practitioner")
     
     user_admin = User(id="231", role="Admin", hash_password=bcrypt_context.hash("admin"), rut="12", phone_number="+53", validate=True, email="dasd@dd.com")
     
@@ -46,8 +49,16 @@ if __name__ == "__main__":
                              validate=True, 
                              email="dasdd@d31d.com")
     
+    
+    user_patient = User(id="3", role="Patient",
+                             hash_password=bcrypt_context.hash("patient"), 
+                             rut="1231252", phone_number="+5111313", 
+                             validate=True, 
+                             email="patient@nacho.cl")
+    
     session.add(user_nacho)
     session.add(user_admin)
     session.add(user_practitioner)
+    session.add(user_patient)
     
     session.commit()
