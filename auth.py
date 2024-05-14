@@ -36,6 +36,7 @@ async def register(user: User, db: db_dependency):
     if user.hash_password == None:
         newUser = User(
             id=user.id,
+            name=user.name,
             email=user.email,
             hash_password=bcrypt_context.hash(generate_random_password()),
             rut=user.rut,
@@ -46,6 +47,7 @@ async def register(user: User, db: db_dependency):
     else:
         newUser = User(
             id=user.id,
+            name=user.name,
             email=user.email,
             hash_password=bcrypt_context.hash(user.hash_password),
             rut=user.rut,
@@ -58,13 +60,14 @@ async def register(user: User, db: db_dependency):
     db.refresh(newUser)
     token = generate_restart_token(newUser)
     smart_mesck_url = os.getenv("SMART_MESCK_URL")
-    msg = f"{newUser.nombre}\n Haz sido registrado en Smart-Mesck, haz click <a href='{smart_mesck_url}/?token={token}'>aquí</a> para completar tu registro"
+    msg = f"{newUser.name}\n Haz sido registrado en Smart-Mesck, haz click <a href='{smart_mesck_url}/?token={token}'>aquí</a> para completar tu registro"
     send_email([newUser.email], "Confirma tu cuenta", msg)
 
 
 @router.post("/token", response_model=Token)
 async def login(db: db_dependency, form_data: OAuth2PasswordRequestForm = Depends()):
-    user = db.query(User).filter(User.email == form_data.username).first()
+    user = db.query(User).filter(User.rut == form_data.username).first()
+    # user = db.query(User).filter(User.email == form_data.username).first()
     if not user:
         return {"error": "Invalid credentials"}
     if not bcrypt_context.verify(form_data.password, user.hash_password):
