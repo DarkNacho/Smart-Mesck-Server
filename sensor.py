@@ -1,6 +1,14 @@
-
 import asyncio
-from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, WebSocketException,status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query,
+    WebSocket,
+    WebSocketDisconnect,
+    WebSocketException,
+    status,
+)
 import json
 
 from jose import JWTError
@@ -15,14 +23,16 @@ dashboard_clients = set()
 
 
 @router.websocket("/arduino_ws")
-async def arduino_websocket(websocket: WebSocket, token : str):
+async def arduino_websocket(websocket: WebSocket, token: str):
     try:
         payload = await decode_token(token)
         print("payload:", payload)
         print("token:", token)
     except JWTError:
-        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token")
-        
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token"
+        )
+
     await websocket.accept()
     arduino_clients.add(websocket)
     print(f"Arduino connected: {websocket.client.host}")
@@ -46,10 +56,8 @@ async def arduino_websocket(websocket: WebSocket, token : str):
     finally:
         arduino_clients.remove(websocket)
         print(f"Arduino disconnected: {websocket.client.host}")
-        
-        
-        
-        
+
+
 @router.websocket("/dashboard_ws")
 async def dashboard_websocket(websocket: WebSocket):
     await websocket.accept()
@@ -68,4 +76,3 @@ async def dashboard_websocket(websocket: WebSocket):
     finally:
         dashboard_clients.remove(websocket)
         print(f"Dashboard disconnected: {websocket.client.host}")
-

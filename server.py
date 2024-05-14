@@ -29,10 +29,8 @@ arduino_clients = set()
 dashboard_clients = set()
 
 
-
-
 @app.websocket("/arduino_ws")
-async def arduino_websocket(websocket: WebSocket, payload = Depends(isAuthorized)):
+async def arduino_websocket(websocket: WebSocket, payload=Depends(isAuthorized)):
     await websocket.accept()
     arduino_clients.add(websocket)
     print(f"Arduino connected: {websocket.client.host}")
@@ -57,6 +55,7 @@ async def arduino_websocket(websocket: WebSocket, payload = Depends(isAuthorized
         arduino_clients.remove(websocket)
         print(f"Arduino disconnected: {websocket.client.host}")
 
+
 @app.websocket("/dashboard_ws")
 async def dashboard_websocket(websocket: WebSocket):
     await websocket.accept()
@@ -78,15 +77,16 @@ async def dashboard_websocket(websocket: WebSocket):
 
 
 @app.get("/test")
-async def test(payload = Depends(isAuthorized)):
+async def test(payload=Depends(isAuthorized)):
     return {"payload": payload}
+
 
 @app.post("/register_user")
 async def send_data(data: User, db: Session = Depends(get_session)):
     print(data)
     db.add(data)
     db.commit()
-    
-    
+
+
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=8000)
