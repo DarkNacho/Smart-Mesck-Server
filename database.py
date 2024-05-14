@@ -6,8 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-DB_FILE = os.getenv("DB_FILE")
-DB_URL = f"sqlite:///{DB_FILE}"
+DB_URL = os.getenv("DB_URL")
 
 engine = create_engine(DB_URL, echo=True)
 
@@ -29,8 +28,8 @@ if __name__ == "__main__":
     from models import User, SensorData
     from passlib.context import CryptContext
 
-    if os.path.exists(DB_FILE):
-        os.remove(DB_FILE)
+    # if os.path.exists(DB_FILE):
+    #    os.remove(DB_FILE)
 
     create_database()
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -39,7 +38,7 @@ if __name__ == "__main__":
 
     user_nacho = User(
         email="dark_nacho_xd@hotmail.cl",
-        id="1",
+        id="6",
         phone_number="+56912345678",
         name="Ignacio Martínez",
         rut="198625388",
@@ -49,14 +48,14 @@ if __name__ == "__main__":
     )
 
     user_admin = User(
-        id="231",
-        name="Administrador",
+        id="1",
+        name="John Doe",
         role="Admin",
         hash_password=bcrypt_context.hash("admin"),
-        rut="12",
-        phone_number="+53",
+        rut="rut",
+        phone_number="123-456-7890",
         validate=True,
-        email="dasd@dd.com",
+        email="john.doe@example.com",
     )
 
     user_practitioner = User(
@@ -81,9 +80,9 @@ if __name__ == "__main__":
         email="patient@nacho.cl",
     )
 
-    session.add(user_nacho)
+    # session.add(user_nacho)
     session.add(user_admin)
-    session.add(user_practitioner)
-    session.add(user_patient)
+    # session.add(user_practitioner)
+    # session.add(user_patient)
 
     session.commit()

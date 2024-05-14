@@ -52,8 +52,8 @@ class EmailService:
         server = smtplib.SMTP_SSL(self.smtp_server, self.port)
 
         # server = smtplib.SMTP(self.smtp_server, self.port)
-
         # server.starttls()
+
         server.login(self.username, self.password)
 
         server.sendmail(
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     print(NAME, USER, PASS, HOST, PORT)
     smart_mesck_url = os.getenv("SMART_MESCK_URL")
     msg = f"Haz sido registrado en Smart-Mesck, haz click <a href='{smart_mesck_url}/?token=token va aquí'>aquí</a> para completar tu registro"
-    send_email(["dark_nacho_xd@hotmail.cl"], "Confirma tu cuenta", msg)
+    send_email(["dark_nacho_xd@hotmail.cl"], "funiona", msg)
 
     # send_email(["nacho@nacho.cl"], "prueba", "hola mundo")
     # msg = Message(sender=USER, recipients=["destinatario@example.com", "nacho@nacho.cl"], subject="¡Hola!")

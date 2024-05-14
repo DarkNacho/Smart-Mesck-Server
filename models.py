@@ -11,6 +11,7 @@ class Token(BaseModel):
 
 
 class User(SQLModel, table=True):
+    __tablename__ = "sm_users"
     id: str = Field(default=None, primary_key=True)
     rut: str = Field(unique=True, index=True)
     name: str
@@ -32,6 +33,7 @@ class SensorType(str, Enum):
 
 
 class SensorData(SQLModel, table=True):
+    __tablename__ = "sm_sensor_data"
     id: str = Field(default=None, primary_key=True)
     device: str
     sensor_type: SensorType
