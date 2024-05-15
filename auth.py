@@ -60,7 +60,7 @@ async def register(user: User, db: db_dependency):
     db.refresh(newUser)
     token = generate_restart_token(newUser)
     smart_mesck_url = os.getenv("SMART_MESCK_URL")
-    msg = f"{newUser.name}\n Haz sido registrado en Smart-Mesck, haz click <a href='{smart_mesck_url}/?token={token}'>aquí</a> para completar tu registro"
+    msg = f"{newUser.name}, haz sido registrado en Smart-Mesck, haz click <a href='{smart_mesck_url}/?token={token}'>aquí</a> para completar tu registro"
     send_email([newUser.email], "Confirma tu cuenta", msg)
 
 
@@ -68,10 +68,8 @@ async def register(user: User, db: db_dependency):
 async def login(db: db_dependency, form_data: OAuth2PasswordRequestForm = Depends()):
     user = db.query(User).filter(User.rut == form_data.username).first()
     # user = db.query(User).filter(User.email == form_data.username).first()
-    if not user:
-        return {"error": "Invalid credentials"}
-    if not bcrypt_context.verify(form_data.password, user.hash_password):
-        return {"error": "Invalid credentials"}
+    if not user or not bcrypt_context.verify(form_data.password, user.hash_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     return {"access_token": create_access_token(user), "token_type": "bearer"}
 
 
@@ -91,17 +89,16 @@ async def activate_user(token: str, db: db_dependency):
 
 
 @router.post("/generate-reset-password-token")
-async def create_reset_password_token(email: str, db: db_dependency):
-    user = db.query(User).filter(User.email == email).first()
+async def create_reset_password_token(rut: str, db: db_dependency):
+    user = db.query(User).filter(User.rut == rut).first()
     if not user:
-        return {"error": "User not found"}
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = generate_restart_token(user)
-    send_email(
-        [user.email],
-        "Reset Password",
-        f"Click here to reset your password: http://localhost:8000/auth/reset-password/{token}",
-    )
+
+    smart_mesck_url = os.getenv("SMART_MESCK_URL")
+    msg = f"{user.name}, haz solicitado restaurar su contraseña en Smart-Mesck, haz click <a href='{smart_mesck_url}/?token={token}'>aquí</a> para realizarlo."
+    send_email([user.email], "Recuperar Contraseña", msg)
 
     return {"message": "Reset password token created successfully"}
 

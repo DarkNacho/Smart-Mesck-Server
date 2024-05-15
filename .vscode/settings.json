@@ -1,0 +1,21 @@
+{
+  "cSpell.words": [
+    "arduino",
+    "autoflush",
+    "castudillo",
+    "dotenv",
+    "fastapi",
+    "jose",
+    "mesck",
+    "Mesck",
+    "passlib",
+    "pydantic",
+    "sessionmaker",
+    "sqlalchemy",
+    "sqlite",
+    "sqlmodel",
+    "starlette",
+    "uvicorn",
+    "websockets"
+  ]
+}
