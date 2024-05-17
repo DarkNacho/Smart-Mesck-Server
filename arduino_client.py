@@ -10,7 +10,8 @@ async def send_data(websocket, json_data):
 
 
 async def main():
-    uri = "wss://castudillo-chart-server-sm.darknacho.xyz/arduino_ws"
+    # uri = "ws://localhost:8000/sensor/arduino_ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJleGFtcGxlQGV4YW1wbGUuY29tIiwiaWQiOiIxIiwicm9sZSI6IkFkbWluIiwiZXhwIjoxNzE2MjE0MTk1LjA5NDg0Mn0.hr286g0Cg75PaubxMLhStuaakaATnVtokoJ3uiNP7HQ"
+    uri = "ws://localhost:8000/sensor/arduino_ws_no_token"
 
     async with websockets.connect(uri) as websocket:
         while True:

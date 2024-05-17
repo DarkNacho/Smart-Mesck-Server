@@ -22,6 +22,33 @@ arduino_clients = set()
 dashboard_clients = set()
 
 
+@router.websocket("/arduino_ws_no_token")
+async def arduino_websocket_no_token(websocket: WebSocket):
+    await websocket.accept()
+    arduino_clients.add(websocket)
+    print(f"Arduino connected: {websocket.client.host}")
+
+    try:
+        while True:
+            data = await websocket.receive_text()
+            try:
+                json_data = json.loads(data)
+                # Process Arduino JSON data as needed
+                print(f"Received JSON data from Arduino: {json_data}")
+                # Broadcast JSON data to all dashboard clients
+                for dashboard_client in dashboard_clients:
+                    await dashboard_client.send_json(json_data)
+            except json.JSONDecodeError:
+                print(f"Invalid JSON data received from Arduino: {data}")
+    except asyncio.CancelledError:
+        pass
+    except WebSocketDisconnect:
+        pass
+    finally:
+        arduino_clients.remove(websocket)
+        print(f"Arduino disconnected: {websocket.client.host}")
+
+
 @router.websocket("/arduino_ws")
 async def arduino_websocket(websocket: WebSocket, token: str):
     try:
