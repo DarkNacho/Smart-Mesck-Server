@@ -10,8 +10,8 @@ async def send_data(websocket, json_data):
 
 
 async def main():
-    uri = "ws://localhost:8000/sensor/arduino_ws_no_token"  # sin ssl
-    # uri = "wss//castudillo-chart-server-sm.darknacho.xyz/arduino_ws_no_token" # con ssl
+    # uri = "ws://localhost:8000/sensor/arduino_ws_no_token"  # sin ssl
+    uri = "wss://castudillo-chart-server-sm.darknacho.xyz/sensor/arduino_ws_no_token"  # con ssl
     async with websockets.connect(uri) as websocket:
         while True:
             tasks = []
