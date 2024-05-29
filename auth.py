@@ -64,6 +64,17 @@ async def register(user: User, db: db_dependency):
     send_email([newUser.email], "Confirma tu cuenta", msg)
 
 
+@router.put("/update", status_code=status.HTTP_200_OK)
+async def update_user(user: User, db: db_dependency):
+    user_db = db.query(User).filter(User.rut == user.rut).first()
+    if user_db is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    user_db.name = user.name
+    user_db.email = user.email
+    user_db.phone_number = user.phone_number
+    db.commit()
+
+
 @router.post("/token", response_model=Token)
 async def login(db: db_dependency, form_data: OAuth2PasswordRequestForm = Depends()):
     user = db.query(User).filter(User.rut == form_data.username).first()

@@ -30,6 +30,7 @@ class SensorType(str, Enum):
     Temperatura = "Temperatura"
     CO2 = "CO2"
     Inercial = "Inercial"
+    Dummy = "Dummy"
 
 
 class SensorData(SQLModel, table=True):
@@ -44,3 +45,12 @@ class SensorData(SQLModel, table=True):
 
     def __repr__(self):
         return f"SensorData(Id={self.id}, Device={self.device}, SensorType={self.sensor_type}, Value={self.value}, Time={self.time}, TimeStamp={self.timestamp}, TimeInServer={self.time_in_server})"
+
+    # Estos son los datos que estoy utilizando en el arduino_client.py para prueba
+    def to_dict(self):
+        return {
+            "device": self.device,
+            "sensor_type": self.sensor_type,
+            "value": self.value,
+            "time": self.time,
+        }
