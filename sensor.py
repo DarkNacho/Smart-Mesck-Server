@@ -71,7 +71,7 @@ async def arduino_websocket_no_token(websocket: WebSocket, db: db_dependency):
                 data_buffer[(sensor_data.device, sensor_data.sensor_type)].append(
                     sensor_data
                 )
-                db.add(sensor_data)
+                # db.add(sensor_data)
                 if time.time() - last_sent_time >= 1:
                     for dashboard_client in dashboard_clients:
                         for sensor_data_list in data_buffer.values():
@@ -89,7 +89,7 @@ async def arduino_websocket_no_token(websocket: WebSocket, db: db_dependency):
     except WebSocketDisconnect:
         pass
     finally:
-        db.commit()
+        # db.commit()
         arduino_clients.remove(websocket)
         print(f"Arduino disconnected: {websocket.client.host}")
 
