@@ -35,7 +35,7 @@ class SensorType(str, Enum):
 
 class SensorData(SQLModel, table=True):
     __tablename__ = "sm_sensor_data"
-    id: str = Field(default=None, primary_key=True)
+    id: int = Field(default=None, primary_key=True)
     device: str
     sensor_type: SensorType
     value: float

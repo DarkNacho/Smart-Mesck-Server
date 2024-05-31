@@ -1,7 +1,9 @@
 import asyncio
 import time
+from typing import Annotated
 from fastapi import (
     APIRouter,
+    Depends,
     HTTPException,
     WebSocket,
     WebSocketDisconnect,
@@ -11,12 +13,15 @@ from fastapi import (
 import json
 
 from jose import JWTError
+from sqlmodel import Session
 
 
 from auth import decode_token
 from models import SensorData
 from collections import defaultdict
 from pydantic import ValidationError
+from database import get_session
+
 
 router = APIRouter(prefix="/sensor", tags=["sensor"])
 
@@ -24,10 +29,28 @@ arduino_clients = set()
 dashboard_clients = set()
 data_buffer = defaultdict(list)
 last_sent_time = time.time()
+db_dependency = Annotated[Session, Depends(get_session)]
+
+
+def items_to_send(sensor_data_list, n=1):
+    if len(sensor_data_list) <= n:
+        # If there are fewer than n items, send all items
+        items_to_send = sensor_data_list
+    else:
+        # Calculate the step size
+        step = len(sensor_data_list) // n
+        # Select n evenly spaced items
+        items_to_send = [
+            sensor_data_list[i] for i in range(0, len(sensor_data_list), step)
+        ]
+        # Ensure the last item is included
+        if items_to_send[-1] != sensor_data_list[-1]:
+            items_to_send[-1] = sensor_data_list[-1]
+    return items_to_send
 
 
 @router.websocket("/arduino_ws_no_token")
-async def arduino_websocket_no_token(websocket: WebSocket):
+async def arduino_websocket_no_token(websocket: WebSocket, db: db_dependency):
     await websocket.accept()
     arduino_clients.add(websocket)
     print(f"Arduino connected: {websocket.client.host}")
@@ -42,15 +65,16 @@ async def arduino_websocket_no_token(websocket: WebSocket):
                 data_buffer[(sensor_data.device, sensor_data.sensor_type)].append(
                     sensor_data
                 )
+                db.add(sensor_data)
                 if time.time() - last_sent_time >= 1:
                     for dashboard_client in dashboard_clients:
                         for sensor_data_list in data_buffer.values():
-                            # Send the last SensorData in the list
-                            await dashboard_client.send_json(
-                                sensor_data_list[-1].to_dict()
-                            )
+                            items = items_to_send(sensor_data_list, n=5)
+                            for item in items:
+                                await dashboard_client.send_json(item.to_dict())
+
                     last_sent_time = time.time()
-                    data_buffer.clear()  # TODO: Enviarlo a una base de datos antes de limpiar
+                    data_buffer.clear()
             except ValidationError:
                 print(f"Validation error for SensorData: {data}")
                 continue
@@ -59,6 +83,7 @@ async def arduino_websocket_no_token(websocket: WebSocket):
     except WebSocketDisconnect:
         pass
     finally:
+        db.commit()
         arduino_clients.remove(websocket)
         print(f"Arduino disconnected: {websocket.client.host}")
 
