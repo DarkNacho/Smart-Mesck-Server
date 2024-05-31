@@ -51,7 +51,13 @@ def items_to_send(sensor_data_list, n=1):
 
 @router.websocket("/arduino_ws_no_token")
 async def arduino_websocket_no_token(websocket: WebSocket, db: db_dependency):
-    await websocket.accept()
+    try:
+        print("Connecting to websocket...")
+        await websocket.accept()
+    except Exception as e:
+        print(f"Failed to connect: {str(e)}")
+        return
+    # await websocket.accept()
     arduino_clients.add(websocket)
     print(f"Arduino connected: {websocket.client.host}")
     global last_sent_time
