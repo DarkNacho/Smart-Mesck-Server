@@ -28,6 +28,7 @@ router = APIRouter(prefix="/sensor", tags=["sensor"])
 arduino_clients = set()
 dashboard_clients = set()
 data_buffer = defaultdict(list)
+save_states = {}
 last_sent_time = time.time()
 db_dependency = Annotated[Session, Depends(get_session)]
 
@@ -61,9 +62,15 @@ async def arduino_websocket_no_token(websocket: WebSocket, db: db_dependency):
     arduino_clients.add(websocket)
     print(f"Arduino connected: {websocket.client.host}")
     global last_sent_time
+    save_states[websocket] = True
+
     try:
         while True:
             data = await websocket.receive_text()
+            if data == "SAVE_ON":
+                save_states[websocket] = True
+            elif data == "SAVE_OFF":
+                save_states[websocket] = False
             try:
                 sensor_data = SensorData.model_validate_json(data)
                 print(f"Received JSON data from Arduino: {data}")
@@ -71,11 +78,14 @@ async def arduino_websocket_no_token(websocket: WebSocket, db: db_dependency):
                 data_buffer[(sensor_data.device, sensor_data.sensor_type)].append(
                     sensor_data
                 )
-                # db.add(sensor_data)
+
+                if save_states[websocket]:
+                    db.add(sensor_data)
+
                 if time.time() - last_sent_time >= 1:
                     for dashboard_client in dashboard_clients:
                         for sensor_data_list in data_buffer.values():
-                            items = items_to_send(sensor_data_list, n=5)
+                            items = items_to_send(sensor_data_list, n=2)
                             for item in items:
                                 await dashboard_client.send_json(item.to_dict())
 
@@ -89,8 +99,11 @@ async def arduino_websocket_no_token(websocket: WebSocket, db: db_dependency):
     except WebSocketDisconnect:
         pass
     finally:
-        # db.commit()
+        if save_states[websocket]:
+            db.commit()
+
         arduino_clients.remove(websocket)
+        del save_states[websocket]
         print(f"Arduino disconnected: {websocket.client.host}")
 
 
