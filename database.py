@@ -7,7 +7,7 @@ load_dotenv()
 
 
 DB_URL = os.getenv("DB_URL")
-
+# DB_FILE = "sqlite:///database.db"
 engine = create_engine(DB_URL, echo=True)
 
 
@@ -24,14 +24,7 @@ def get_session():
         session.close()
 
 
-if __name__ == "__main__":
-    from models import User, SensorData
-    from passlib.context import CryptContext
-
-    # if os.path.exists(DB_FILE):
-    #    os.remove(DB_FILE)
-
-    create_database()
+def populate_db():
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = SessionLocal()
     bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -86,3 +79,14 @@ if __name__ == "__main__":
     # session.add(user_patient)
 
     session.commit()
+
+
+if __name__ == "__main__":
+    from models import User, SensorData
+    from passlib.context import CryptContext
+
+    # if os.path.exists(DB_FILE):
+    #    os.remove(DB_FILE)
+
+    create_database()
+    # populate_db()

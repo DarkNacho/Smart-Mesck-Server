@@ -133,7 +133,7 @@ async def reset_password(
 
 
 @router.get("/users/me")
-async def get_current_user(token: str = Depends(oauth2_bearer)):
+async def get_current_user(db: db_dependency, token: str = Depends(oauth2_bearer)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -147,7 +147,7 @@ async def get_current_user(token: str = Depends(oauth2_bearer)):
     except JWTError:
         raise credentials_exception
 
-    user = get_user_by_id(user_id)
+    user = get_user_by_id(user_id, db)
     if user is None:
         raise credentials_exception
     return user
@@ -188,7 +188,7 @@ def generate_restart_token(user: User, delta: timedelta = timedelta(days=3)):
 
 
 def get_user_by_id(user_id: int, db: db_dependency):
-    return db.query(User).get(user_id)
+    return db.get(User, user_id)
 
 
 async def isAuthorized(token: str = Depends(oauth2_bearer)):

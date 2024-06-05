@@ -19,7 +19,8 @@ async def main():
                 arduino_data = SensorData(
                     device=f"simulador-dummy",
                     sensor_type=SensorType.Temperatura,
-                    time=datetime.now().isoformat(),
+                    timestamp_epoch=int(datetime.now().timestamp()),
+                    timestamp_millis=random.randint(0, 999),
                     value=random.uniform(30, 38),
                 )
                 json_data = arduino_data.model_dump_json()

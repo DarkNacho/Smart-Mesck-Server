@@ -28,7 +28,7 @@ router = APIRouter(prefix="/sensor", tags=["sensor"])
 arduino_clients = set()
 dashboard_clients = set()
 data_buffer = defaultdict(list)
-save_states = {}
+
 last_sent_time = time.time()
 db_dependency = Annotated[Session, Depends(get_session)]
 
@@ -62,25 +62,20 @@ async def arduino_websocket_no_token(websocket: WebSocket, db: db_dependency):
     arduino_clients.add(websocket)
     print(f"Arduino connected: {websocket.client.host}")
     global last_sent_time
-    save_states[websocket] = True
 
     try:
         while True:
             data = await websocket.receive_text()
-            if data == "SAVE_ON":
-                save_states[websocket] = True
-            elif data == "SAVE_OFF":
-                save_states[websocket] = False
+
             try:
                 sensor_data = SensorData.model_validate_json(data)
-                print(f"Received JSON data from Arduino: {data}")
+                print(f"Received JSON data from Arduino: {sensor_data}")
                 # Add SensorData to the list for its device and sensor type
                 data_buffer[(sensor_data.device, sensor_data.sensor_type)].append(
                     sensor_data
                 )
 
-                if save_states[websocket]:
-                    db.add(sensor_data)
+                # db.add(sensor_data)
 
                 if time.time() - last_sent_time >= 1:
                     for dashboard_client in dashboard_clients:
@@ -99,11 +94,8 @@ async def arduino_websocket_no_token(websocket: WebSocket, db: db_dependency):
     except WebSocketDisconnect:
         pass
     finally:
-        if save_states[websocket]:
-            db.commit()
-
+        # db.commit()
         arduino_clients.remove(websocket)
-        del save_states[websocket]
         print(f"Arduino disconnected: {websocket.client.host}")
 
 
@@ -148,7 +140,6 @@ async def dashboard_websocket(websocket: WebSocket):
     await websocket.accept()
     dashboard_clients.add(websocket)
     print(f"Dashboard connected: {websocket.client.host}")
-
     try:
         while True:
             # Dashboard clients can listen for JSON data sent by Arduino devices
