@@ -4,6 +4,7 @@ import uvicorn
 
 # routes
 from sensor import router as sensor_router
+from sensor2 import router as sensor2_router
 from auth import router as auth_router, isAuthorized
 from file_manager import router as file_router
 
@@ -19,6 +20,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(sensor_router)
+app.include_router(sensor2_router)
 app.include_router(file_router)
 ()
 
