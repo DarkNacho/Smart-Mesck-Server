@@ -39,7 +39,7 @@ if __name__ == "__main__":
     # Create a token
     email = "example@example.com"
     id = "1"
-    role = "Admin"
+    role = "Practitioner"
     token = generate_token(email, id, role)
     print(token)
     # Validate the token

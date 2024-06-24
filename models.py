@@ -43,6 +43,8 @@ class SensorData(SQLModel, table=True):
     value: float
     timestamp_epoch: int = Field(sa_column=BigInteger)
     timestamp_millis: int
+    patient_id: str = Field(index=True)
+    encounter_id: str = Field(index=True)
 
     @property
     def datetime(self):
