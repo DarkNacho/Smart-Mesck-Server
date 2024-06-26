@@ -53,7 +53,7 @@ class SensorData(SQLModel, table=True):
         )
 
     def __repr__(self):
-        return f"SensorData(Id={self.id}, Device={self.device}, SensorType={self.sensor_type}, Value={self.value}, TimeEpoch={self.timestamp_epoch}, TimeMiliSec={self.timestamp_millis}, DateTime={self.datetime.isoformat()})"
+        return f"SensorData(Id={self.id}, Device={self.device}, SensorType={self.sensor_type}, Value={self.value}, TimeEpoch={self.timestamp_epoch}, TimeMiliSec={self.timestamp_millis}, DateTime={self.datetime.isoformat()}, PatientId={self.patient_id}, EncounterId={self.encounter_id})"
 
     def __str__(self):
         return self.__repr__()
@@ -67,6 +67,8 @@ class SensorData(SQLModel, table=True):
             "timestamp_epoch": self.timestamp_epoch,
             "timestamp_millis": self.timestamp_millis,
             "datetime": self.datetime.isoformat(),
+            "patient_id": self.patient_id,
+            "encounter_id": self.encounter_id,
         }
 
 

@@ -1,3 +1,5 @@
+from datetime import datetime
+import random
 from sqlmodel import SQLModel, create_engine
 from sqlalchemy.orm import sessionmaker
 import os
@@ -6,9 +8,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-DB_URL = os.getenv("DB_URL")
-# DB_FILE = "sqlite:///database.db"
-engine = create_engine(DB_URL, echo=True)
+# DB_URL = os.getenv("DB_URL")
+DB_FILE = "sqlite:///database.db"
+engine = create_engine(DB_FILE, echo=True)
 
 
 def create_database():
@@ -81,12 +83,45 @@ def populate_db():
     session.commit()
 
 
+def generate_random_data():
+
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db_session = SessionLocal()
+
+    encounters = [f"encounter_{i}" for i in range(1, 11)]
+    patients = ["patient_1", "patient_2"]
+    sensor_types = ["temperature", "heart_rate", "blood_pressure"]
+    sample_counts = {"temperature": 100, "heart_rate": 150, "blood_pressure": 120}
+
+    for patient in patients:
+        for i in range(10):
+            encounter = f"encounter_{i}_{patient}"
+            for sensor_type in sensor_types:
+                for n in range(sample_counts[sensor_type]):
+                    time = datetime.now().timestamp() + (n + 1) * 10
+                    data = SensorData(
+                        device="device_1",
+                        sensor_type=sensor_type,
+                        value=(
+                            random.uniform(20, 40)
+                            if sensor_type == "temperature"
+                            else random.randint(60, 100)
+                        ),
+                        timestamp_epoch=int(time),
+                        timestamp_millis=int(time * 1000),
+                        patient_id=patient,
+                        encounter_id=encounter,
+                    )
+                    db_session.add(data)
+            db_session.commit()
+
+
 if __name__ == "__main__":
     from models import User, SensorData
     from passlib.context import CryptContext
 
     # if os.path.exists(DB_FILE):
     #    os.remove(DB_FILE)
-
     create_database()
+    generate_random_data()
     # populate_db()

@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import time
 from typing import Annotated
 from fastapi import (
@@ -11,6 +12,7 @@ from fastapi import (
     status,
 )
 import json
+from fastapi.responses import StreamingResponse
 import requests
 import os
 from dotenv import load_dotenv
@@ -23,8 +25,11 @@ from sqlmodel import Session
 from auth import decode_token
 from models import SensorData
 from collections import defaultdict
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 from database import get_session
+
+from sqlalchemy import func
+
 
 load_dotenv()
 
@@ -38,6 +43,15 @@ last_sent_time = time.time()
 db_dependency = Annotated[Session, Depends(get_session)]
 
 HAPI_FHIR_URL = os.getenv("HAPI_FHIR_URL")
+
+
+class PatientData(BaseModel):
+    rut: str
+    email: str
+    cel: str
+    birthday_date: str
+    age: str
+    civil_state: str
 
 
 def items_to_send(sensor_data_list, n=1):
@@ -176,3 +190,173 @@ async def dashboard_websocket(websocket: WebSocket, token: str, patient_id: str)
     finally:
         dashboard_clients[patient_id].remove(websocket)
         print(f"Dashboard disconnected: {websocket.client.host}")
+
+
+@router.get("/report/{patient_id}")
+async def get_report(patient_id: str, patient_data: PatientData, db: db_dependency):
+    # Assuming the database supports these functions directly
+    query_result = (
+        db.query(
+            SensorData.encounter_id,
+            SensorData.sensor_type,
+            func.min(SensorData.value).label("min_value"),
+            func.max(SensorData.value).label("max_value"),
+            func.avg(SensorData.value).label("avg_value"),
+            func.count(SensorData.value).label("count"),
+            func.min(SensorData.timestamp_epoch).label("start_time"),
+            func.max(SensorData.timestamp_epoch).label("end_time"),
+        )
+        .filter(SensorData.patient_id == patient_id)
+        .group_by(SensorData.encounter_id, SensorData.sensor_type)
+        .all()
+    )
+
+    # Preparing the results to return
+    results = defaultdict(lambda: defaultdict(dict))
+    for (
+        encounter_id,
+        sensor_type,
+        min_value,
+        max_value,
+        avg_value,
+        count,
+        start_time,
+        end_time,
+    ) in query_result:
+        start_datetime = datetime.fromtimestamp(start_time)
+        end_datetime = datetime.fromtimestamp(end_time)
+        duration = end_datetime - start_datetime
+
+        results[encounter_id][sensor_type] = {
+            "min": round(min_value, 2),
+            "max": round(max_value, 2),
+            "avg": round(avg_value, 2),
+            "count": count,
+            "day": start_datetime.strftime("%d-%m-%Y"),
+            "start": start_datetime.strftime("%H:%M:%S"),
+            "end": end_datetime.strftime("%H:%M:%S"),
+            "duration": str(duration).split(".")[0],  # Format duration to HH:MM:SS
+        }
+    pdf_file = generate_pdf_report(results, patient_data)
+    return StreamingResponse(
+        pdf_file,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=report.pdf"},
+    )
+
+
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+import io
+
+
+def calculate_age(birthdate):
+    today = datetime.today()
+    birthdate = datetime.strptime(birthdate, "%Y-%m-%d")
+    age = (
+        today.year
+        - birthdate.year
+        - ((today.month, today.day) < (birthdate.month, birthdate.day))
+    )
+    return age
+
+
+def generate_pdf_report(data, patient_data: PatientData):
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    story = []
+
+    # Calcular la edad del paciente
+    patient_age = calculate_age(patient_data.birthday_date)
+
+    # Datos personales del paciente
+    patient_info = [
+        ["RUT", patient_data.rut],
+        ["Email", patient_data.email],
+        ["Celular", patient_data.cel],
+        ["Fecha de Nacimiento", patient_data.birthday_date],
+        [
+            "Edad",
+            patient_data.age,
+        ],  # Aquí ya no es necesario convertir a string, asumiendo que age ya es un string en el modelo
+        ["Estado Civil", patient_data.civil_state],
+    ]
+
+    patient_table = Table(patient_info, colWidths=[2 * inch, 4 * inch])
+    patient_table.setStyle(
+        TableStyle(
+            [
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
+                ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
+            ]
+        )
+    )
+
+    story.append(patient_table)
+    story.append(Spacer(1, 12))
+
+    ## Datos de los encuentros de sensores
+
+    for encounter_id, encounter_data in data.items():
+        encounter_header = [[encounter_id]]
+        encounter_table_data = [
+            [
+                "Sensor Type",
+                "Min",
+                "Max",
+                "Avg",
+                "Count",
+                "Day",
+                "Start",
+                "End",
+                "Duration",
+            ]
+        ]
+
+        for sensor_type, sensor_data in encounter_data.items():
+            row = [sensor_type]
+            row.extend(
+                [
+                    sensor_data["min"],
+                    sensor_data["max"],
+                    sensor_data["avg"],
+                    sensor_data["count"],
+                    sensor_data["day"],
+                    sensor_data["start"],
+                    sensor_data["end"],
+                    sensor_data["duration"],
+                ]
+            )
+            encounter_table_data.append(row)
+
+        header_table = Table(encounter_header)
+        header_table.setStyle(
+            TableStyle(
+                [
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 14),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+                ]
+            )
+        )
+
+        encounter_table = Table(encounter_table_data)
+        encounter_table.setStyle(
+            TableStyle(
+                [
+                    ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
+                    ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+                ]
+            )
+        )
+
+        story.append(header_table)
+        story.append(encounter_table)
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer

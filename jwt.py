@@ -12,12 +12,13 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 
 def generate_token(
-    email: str, id: str, role: str, delta: timedelta = timedelta(days=3)
+    email: str, id: str, role: str, name: str, delta: timedelta = timedelta(days=3)
 ):
     payload = {
         "sub": email,
         "id": id,
         "role": role,
+        "name": name,
         "exp": time.time() + delta.total_seconds() + (ACCESS_TOKEN_EXPIRE_MINUTES * 60),
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
@@ -37,10 +38,18 @@ def validate_token(token: str):
 
 if __name__ == "__main__":
     # Create a token
-    email = "example@example.com"
-    id = "1"
-    role = "Practitioner"
-    token = generate_token(email, id, role)
+    # email = "ignacia.cortes1966@gmail.com"
+    # id = "112"
+    # role = "Patient"
+    # token = generate_token(
+    #    email, id, role, "Ignacia del Carmen Cortés González", delta=timedelta(days=60)
+    # )
+    email = "kisineg556@losvtn.com"
+    id = "5"
+    role = "Patient"
+    token = generate_token(
+        email, id, role, "Juan Carlos Bodoque", delta=timedelta(days=60)
+    )
     print(token)
     # Validate the token
     payload = validate_token(token)
