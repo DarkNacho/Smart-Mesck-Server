@@ -205,6 +205,7 @@ async def get_report(patient_id: str, patient_data: PatientData, db: db_dependen
             func.count(SensorData.value).label("count"),
             func.min(SensorData.timestamp_epoch).label("start_time"),
             func.max(SensorData.timestamp_epoch).label("end_time"),
+            SensorData.timestamp_epoch.label("timestamp_epoch"),
         )
         .filter(SensorData.patient_id == patient_id)
         .group_by(SensorData.encounter_id, SensorData.sensor_type)
@@ -222,6 +223,7 @@ async def get_report(patient_id: str, patient_data: PatientData, db: db_dependen
         count,
         start_time,
         end_time,
+        timestamp_epoch,
     ) in query_result:
         start_datetime = datetime.fromtimestamp(start_time)
         end_datetime = datetime.fromtimestamp(end_time)
@@ -236,6 +238,7 @@ async def get_report(patient_id: str, patient_data: PatientData, db: db_dependen
             "start": start_datetime.strftime("%H:%M:%S"),
             "end": end_datetime.strftime("%H:%M:%S"),
             "duration": str(duration).split(".")[0],  # Format duration to HH:MM:SS
+            "timestamp_epoch": timestamp_epoch,
         }
     pdf_file = generate_pdf_report(results, patient_data)
     return StreamingResponse(
@@ -251,6 +254,8 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Par
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 import io
+import matplotlib.pyplot as plt
+from reportlab.platypus import Image
 
 
 def calculate_age(birthdate):
@@ -311,6 +316,8 @@ def generate_pdf_report(data, patient_data: PatientData):
 
     ## Datos de los encuentros de sensores
 
+    sensorData = defaultdict(lambda: defaultdict(list))
+
     for encounter_id, encounter_data in data.items():
         encounter_header = [[encounter_id]]
         encounter_table_data = [
@@ -328,6 +335,13 @@ def generate_pdf_report(data, patient_data: PatientData):
         ]
 
         for sensor_type, sensor_data in encounter_data.items():
+            sensorData[sensor_type]["min"].append(sensor_data["min"])
+            sensorData[sensor_type]["max"].append(sensor_data["max"])
+            sensorData[sensor_type]["avg"].append(sensor_data["avg"])
+            sensorData[sensor_type]["timestamp_epoch"].append(
+                sensor_data["timestamp_epoch"]
+            )
+
             row = [sensor_type]
             row.extend(
                 [
@@ -367,6 +381,27 @@ def generate_pdf_report(data, patient_data: PatientData):
 
         story.append(header_table)
         story.append(encounter_table)
+
+    # Generar y agregar gráficos al PDF
+    for sensor_type, stats in sensorData.items():
+        plt.figure()
+        plt.plot(stats["timestamp_epoch"], stats["min"], label="Min", marker="o")
+        plt.plot(stats["timestamp_epoch"], stats["max"], label="Max", marker="o")
+        plt.plot(stats["timestamp_epoch"], stats["avg"], label="Avg", marker="o")
+        plt.title(f"{sensor_type} Sensor Data")
+        plt.xlabel("Day")
+        plt.ylabel("Value")
+        plt.legend()
+        plt.tight_layout()
+
+        # Guardar el gráfico en un buffer
+        img_buffer = io.BytesIO()
+        plt.savefig(img_buffer, format="png")
+        img_buffer.seek(0)
+        plt.close()
+
+        # Agregar el gráfico al PDF
+        story.append(Image(img_buffer))
 
     doc.build(story)
     buffer.seek(0)
