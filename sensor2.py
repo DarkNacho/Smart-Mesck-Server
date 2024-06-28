@@ -46,11 +46,11 @@ HAPI_FHIR_URL = os.getenv("HAPI_FHIR_URL")
 
 
 class PatientData(BaseModel):
+    nombre: str
     rut: str
     email: str
     cel: str
     birthday_date: str
-    age: str
     civil_state: str
 
 
@@ -245,8 +245,9 @@ async def get_report(patient_id: str, patient_data: PatientData, db: db_dependen
     )
 
 
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 import io
@@ -268,18 +269,28 @@ def generate_pdf_report(data, patient_data: PatientData):
     doc = SimpleDocTemplate(buffer, pagesize=letter)
     story = []
 
+    # Define the title and style
+    styles = getSampleStyleSheet()
+    title_style = styles["Title"]
+    report_title = Paragraph("Reporte de Paciente", title_style)
+
+    # Add the title to the story
+    story.append(report_title)
+    story.append(Spacer(1, 12))
+
     # Calcular la edad del paciente
     patient_age = calculate_age(patient_data.birthday_date)
 
     # Datos personales del paciente
     patient_info = [
+        ["Nombre", patient_data.nombre],
         ["RUT", patient_data.rut],
         ["Email", patient_data.email],
         ["Celular", patient_data.cel],
         ["Fecha de Nacimiento", patient_data.birthday_date],
         [
             "Edad",
-            patient_data.age,
+            patient_age,
         ],  # Aquí ya no es necesario convertir a string, asumiendo que age ya es un string en el modelo
         ["Estado Civil", patient_data.civil_state],
     ]

@@ -84,33 +84,61 @@ def populate_db():
 
 
 def generate_random_data():
-
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db_session = SessionLocal()
 
-    encounters = [f"encounter_{i}" for i in range(1, 11)]
     patients = ["patient_1", "patient_2"]
-    sensor_types = ["temperature", "heart_rate", "blood_pressure"]
-    sample_counts = {"temperature": 100, "heart_rate": 150, "blood_pressure": 120}
+    sensor_types = [
+        "oxygen_saturation",
+        "heart_rate",
+        "acceleration_x",
+        "acceleration_y",
+        "acceleration_z",
+        "angular_velocity_x",
+        "angular_velocity_y",
+        "angular_velocity_z",
+    ]
+    sample_counts = {
+        "oxygen_saturation": 100,
+        "heart_rate": 100,
+        "acceleration_x": 200,
+        "acceleration_y": 200,
+        "acceleration_z": 200,
+        "angular_velocity_x": 150,
+        "angular_velocity_y": 150,
+        "angular_velocity_z": 150,
+    }  # Diferentes cantidades de muestras para cada sensor
+    number_of_encounters = 3  # Definir el número de encuentros
 
     for patient in patients:
-        for i in range(10):
-            encounter = f"encounter_{i}_{patient}"
+        for encounter_index in range(
+            number_of_encounters
+        ):  # Iterar sobre cada encuentro
+            encounter_id = f"encounter_{encounter_index}_{patient}"
             for sensor_type in sensor_types:
                 for n in range(sample_counts[sensor_type]):
                     time = datetime.now().timestamp() + (n + 1) * 10
+                    if sensor_type == "oxygen_saturation":
+                        value = random.uniform(95, 100)  # Saturación de oxígeno
+                    elif sensor_type == "heart_rate":
+                        value = random.randint(60, 100)  # Frecuencia cardíaca
+                    elif "acceleration" in sensor_type:
+                        value = random.uniform(-1, 1)  # Aceleración en x, y, z
+                    elif "angular_velocity" in sensor_type:
+                        value = random.uniform(
+                            -180, 180
+                        )  # Velocidad angular en x, y, z
+                    else:
+                        value = 0  # Valor por defecto
+
                     data = SensorData(
                         device="device_1",
                         sensor_type=sensor_type,
-                        value=(
-                            random.uniform(20, 40)
-                            if sensor_type == "temperature"
-                            else random.randint(60, 100)
-                        ),
+                        value=value,
                         timestamp_epoch=int(time),
                         timestamp_millis=int(time * 1000),
                         patient_id=patient,
-                        encounter_id=encounter,
+                        encounter_id=encounter_id,
                     )
                     db_session.add(data)
             db_session.commit()
