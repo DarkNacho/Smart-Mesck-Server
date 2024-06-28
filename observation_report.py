@@ -22,8 +22,6 @@ def generate_pdf_report(observation_data_array):
     story.append(Spacer(1, 12))
 
     for observation_data in observation_data_array:
-        # Observation details
-
         # Convertir la cadena de fecha a un objeto datetime
         fecha_objeto = datetime.fromisoformat(observation_data["meta"]["lastUpdated"])
         fecha_formateada = fecha_objeto.strftime("%Y-%m-%d %H:%M:%S")
@@ -38,35 +36,55 @@ def generate_pdf_report(observation_data_array):
         story.append(Spacer(1, 12))
 
         observation_info = [
-            ["ID de Observación", observation_data["id"]],
-            ["Última Actualización", fecha_formateada],
-            ["Estado", observation_data["status"]],
-            ["Categoría", observation_data["category"][0]["coding"][0]["display"]],
-            ["Código", observation_data["code"]["coding"][0]["code"]],
+            ["ID de Observación", Paragraph(observation_data["id"], styles["Normal"])],
+            ["Última Actualización", Paragraph(fecha_formateada, styles["Normal"])],
+            ["Estado", Paragraph(observation_data["status"], styles["Normal"])],
+            [
+                "Categoría",
+                Paragraph(
+                    observation_data["category"][0]["coding"][0]["display"],
+                    styles["Normal"],
+                ),
+            ],
+            [
+                "Código",
+                Paragraph(
+                    observation_data["code"]["coding"][0]["code"], styles["Normal"]
+                ),
+            ],
             [
                 "Paciente",
-                f"{observation_data['subject']['display']}",
+                Paragraph(
+                    f"{observation_data['subject']['display']}", styles["Normal"]
+                ),
             ],
             [
                 "Encuentro",
-                f"{observation_data['encounter']['display']}",
-            ],
-            ["Emitido el", observation_data["issued"]],
-            [
-                "Performer",
-                f"{observation_data['performer'][0]['display']}",
-            ],
-            ["Valor", observation_data["valueString"]],
-            [
-                "Interpretación",
-                ", ".join(
-                    [
-                        f"{code['display']} (Código: {code['code']})"
-                        for code in observation_data["interpretation"][0]["coding"]
-                    ]
+                Paragraph(
+                    f"{observation_data['encounter']['display']}", styles["Normal"]
                 ),
             ],
-            ["Notas", observation_data["note"][0]["text"]],
+            ["Emitido el", Paragraph(observation_data["issued"], styles["Normal"])],
+            [
+                "Performer",
+                Paragraph(
+                    f"{observation_data['performer'][0]['display']}", styles["Normal"]
+                ),
+            ],
+            ["Valor", Paragraph(observation_data["valueString"], styles["Normal"])],
+            [
+                "Interpretación",
+                Paragraph(
+                    ", ".join(
+                        [
+                            f"{code['display']} (Código: {code['code']})"
+                            for code in observation_data["interpretation"][0]["coding"]
+                        ]
+                    ),
+                    styles["Normal"],
+                ),
+            ],
+            ["Notas", Paragraph(observation_data["note"][0]["text"], styles["Normal"])],
         ]
 
         # Create a table with the observation info
@@ -77,6 +95,7 @@ def generate_pdf_report(observation_data_array):
                     ("ALIGN", (0, 0), (-1, -1), "LEFT"),
                     ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
                     ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
                 ]
             )
         )
