@@ -1,6 +1,5 @@
 from datetime import timedelta
 import time
-
 from fastapi import APIRouter, Depends, Form, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
@@ -22,7 +21,7 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
-
+HAPI_FHIR_URL = os.getenv("HAPI_FHIR_URL")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -204,6 +203,29 @@ async def isAuthorized(token: str = Depends(oauth2_bearer)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
+        # if(Role != None):
+        #    role = payload.get("role")
+        #    if(role != Role):
+        #        raise credentials_forbidden
+    except ExpiredSignatureError:
+        raise credentials_forbidden
+    except JWTError:
+        raise credentials_exception
+
+
+async def isAuthorizedToken(token: str = Depends(oauth2_bearer)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    credentials_forbidden = HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="You are not authorized to access this resource",
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return token
         # if(Role != None):
         #    role = payload.get("role")
         #    if(role != Role):
