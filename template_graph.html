@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .graph-container {
+            border: 2px solid black;
+            border-radius: 10px;
+        }
+
+        .graph-header {
+            background-color: #eae9e9;
+            color: black;
+            padding: 10px;
+            margin: 0;
+            border-radius: 5px;
+            display: table;
+            width: 100%;
+        }
+
+        .graph-header h2 {
+            display: table-cell;
+            vertical-align: middle;
+            width: 100%;
+        }
+
+        .graph-header .right-align {
+            display: table-cell;
+            text-align: right;
+        }
+
+        .graph-header img {
+            height: 50px;
+        }
+
+        .graph-body {
+            padding: 20px;
+        }
+
+        .graph-body img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="graph-container">
+        <div class="graph-header">
+            <h2>{{title}}</h2>
+            <div class="right-align">
+                <img src="{{ img_path }}" alt="logo">
+            </div>
+        </div>
+        <div class="graph-body">
+            <img src="data:image/png;base64,{{ img_data }}" alt="Report Image">
+        </div>
+    </div>
+    <div style="margin-top: 30px; background-color: white;"></div>
+</body>
+
+</html>

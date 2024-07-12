@@ -45,15 +45,6 @@ db_dependency = Annotated[Session, Depends(get_session)]
 HAPI_FHIR_URL = os.getenv("HAPI_FHIR_URL")
 
 
-class PatientData(BaseModel):
-    nombre: str
-    rut: str
-    email: str
-    cel: str
-    birthday_date: str
-    civil_state: str
-
-
 def items_to_send(sensor_data_list, n=1):
     if len(sensor_data_list) <= n:
         # If there are fewer than n items, send all items
@@ -125,7 +116,7 @@ async def arduino_websocket(websocket: WebSocket, token: str, db: db_dependency)
                     sensor_data
                 )
 
-                # db.add(sensor_data)
+                db.add(sensor_data)
 
                 if time.time() - last_sent_time >= 1:
                     for dashboard_client in dashboard_clients[
@@ -146,7 +137,7 @@ async def arduino_websocket(websocket: WebSocket, token: str, db: db_dependency)
     except WebSocketDisconnect:
         pass
     finally:
-        # db.commit()
+        db.commit()
         arduino_clients.remove(websocket)
         print(f"Arduino disconnected: {websocket.client.host}")
 
@@ -180,6 +171,7 @@ async def dashboard_websocket(websocket: WebSocket, token: str, patient_id: str)
     print(f"Dashboard connected: {websocket.client.host}")
     try:
         while True:
+            websocket.send_json({"message": "Connected"})
             # Dashboard clients can listen for JSON data sent by Arduino devices
             data = await websocket.receive_json()
             print(f"Received JSON data in dashboard: {data}")
@@ -190,219 +182,3 @@ async def dashboard_websocket(websocket: WebSocket, token: str, patient_id: str)
     finally:
         dashboard_clients[patient_id].remove(websocket)
         print(f"Dashboard disconnected: {websocket.client.host}")
-
-
-@router.get("/report/{patient_id}")
-async def get_report(patient_id: str, patient_data: PatientData, db: db_dependency):
-    # Assuming the database supports these functions directly
-    query_result = (
-        db.query(
-            SensorData.encounter_id,
-            SensorData.sensor_type,
-            func.min(SensorData.value).label("min_value"),
-            func.max(SensorData.value).label("max_value"),
-            func.avg(SensorData.value).label("avg_value"),
-            func.count(SensorData.value).label("count"),
-            func.min(SensorData.timestamp_epoch).label("start_time"),
-            func.max(SensorData.timestamp_epoch).label("end_time"),
-            SensorData.timestamp_epoch.label("timestamp_epoch"),
-        )
-        .filter(SensorData.patient_id == patient_id)
-        .group_by(SensorData.encounter_id, SensorData.sensor_type)
-        .all()
-    )
-
-    # Preparing the results to return
-    results = defaultdict(lambda: defaultdict(dict))
-    for (
-        encounter_id,
-        sensor_type,
-        min_value,
-        max_value,
-        avg_value,
-        count,
-        start_time,
-        end_time,
-        timestamp_epoch,
-    ) in query_result:
-        start_datetime = datetime.fromtimestamp(start_time)
-        end_datetime = datetime.fromtimestamp(end_time)
-        duration = end_datetime - start_datetime
-
-        results[encounter_id][sensor_type] = {
-            "min": round(min_value, 2),
-            "max": round(max_value, 2),
-            "avg": round(avg_value, 2),
-            "count": count,
-            "day": start_datetime.strftime("%d-%m-%Y"),
-            "start": start_datetime.strftime("%H:%M:%S"),
-            "end": end_datetime.strftime("%H:%M:%S"),
-            "duration": str(duration).split(".")[0],  # Format duration to HH:MM:SS
-            "timestamp_epoch": timestamp_epoch,
-        }
-    pdf_file = generate_pdf_report(results, patient_data)
-    return StreamingResponse(
-        pdf_file,
-        media_type="application/pdf",
-        headers={"Content-Disposition": "attachment; filename=report.pdf"},
-    )
-
-
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph
-from reportlab.lib import colors
-from reportlab.lib.units import inch
-import io
-import matplotlib.pyplot as plt
-from reportlab.platypus import Image
-
-
-def calculate_age(birthdate):
-    today = datetime.today()
-    birthdate = datetime.strptime(birthdate, "%Y-%m-%d")
-    age = (
-        today.year
-        - birthdate.year
-        - ((today.month, today.day) < (birthdate.month, birthdate.day))
-    )
-    return age
-
-
-def generate_pdf_report(data, patient_data: PatientData):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-    story = []
-
-    # Define the title and style
-    styles = getSampleStyleSheet()
-    title_style = styles["Title"]
-    report_title = Paragraph("Reporte de Paciente", title_style)
-
-    # Add the title to the story
-    story.append(report_title)
-    story.append(Spacer(1, 12))
-
-    # Calcular la edad del paciente
-    patient_age = calculate_age(patient_data.birthday_date)
-
-    # Datos personales del paciente
-    patient_info = [
-        ["Nombre", patient_data.nombre],
-        ["RUT", patient_data.rut],
-        ["Email", patient_data.email],
-        ["Celular", patient_data.cel],
-        ["Fecha de Nacimiento", patient_data.birthday_date],
-        [
-            "Edad",
-            patient_age,
-        ],  # Aquí ya no es necesario convertir a string, asumiendo que age ya es un string en el modelo
-        ["Estado Civil", patient_data.civil_state],
-    ]
-
-    patient_table = Table(patient_info, colWidths=[2 * inch, 4 * inch])
-    patient_table.setStyle(
-        TableStyle(
-            [
-                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-                ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
-                ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
-            ]
-        )
-    )
-
-    story.append(patient_table)
-    story.append(Spacer(1, 12))
-
-    ## Datos de los encuentros de sensores
-
-    sensorData = defaultdict(lambda: defaultdict(list))
-
-    for encounter_id, encounter_data in data.items():
-        encounter_header = [[encounter_id]]
-        encounter_table_data = [
-            [
-                "Sensor Type",
-                "Min",
-                "Max",
-                "Avg",
-                "Count",
-                "Day",
-                "Start",
-                "End",
-                "Duration",
-            ]
-        ]
-
-        for sensor_type, sensor_data in encounter_data.items():
-            sensorData[sensor_type]["min"].append(sensor_data["min"])
-            sensorData[sensor_type]["max"].append(sensor_data["max"])
-            sensorData[sensor_type]["avg"].append(sensor_data["avg"])
-            sensorData[sensor_type]["timestamp_epoch"].append(
-                sensor_data["timestamp_epoch"]
-            )
-
-            row = [sensor_type]
-            row.extend(
-                [
-                    sensor_data["min"],
-                    sensor_data["max"],
-                    sensor_data["avg"],
-                    sensor_data["count"],
-                    sensor_data["day"],
-                    sensor_data["start"],
-                    sensor_data["end"],
-                    sensor_data["duration"],
-                ]
-            )
-            encounter_table_data.append(row)
-
-        header_table = Table(encounter_header)
-        header_table.setStyle(
-            TableStyle(
-                [
-                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                    ("FONTSIZE", (0, 0), (-1, -1), 14),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
-                ]
-            )
-        )
-
-        encounter_table = Table(encounter_table_data)
-        encounter_table.setStyle(
-            TableStyle(
-                [
-                    ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
-                    ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
-                ]
-            )
-        )
-
-        story.append(header_table)
-        story.append(encounter_table)
-
-    # Generar y agregar gráficos al PDF
-    for sensor_type, stats in sensorData.items():
-        plt.figure()
-        plt.plot(stats["timestamp_epoch"], stats["min"], label="Min", marker="o")
-        plt.plot(stats["timestamp_epoch"], stats["max"], label="Max", marker="o")
-        plt.plot(stats["timestamp_epoch"], stats["avg"], label="Avg", marker="o")
-        plt.title(f"{sensor_type} Sensor Data")
-        plt.xlabel("Day")
-        plt.ylabel("Value")
-        plt.legend()
-        plt.tight_layout()
-
-        # Guardar el gráfico en un buffer
-        img_buffer = io.BytesIO()
-        plt.savefig(img_buffer, format="png")
-        img_buffer.seek(0)
-        plt.close()
-
-        # Agregar el gráfico al PDF
-        story.append(Image(img_buffer))
-
-    doc.build(story)
-    buffer.seek(0)
-    return buffer
