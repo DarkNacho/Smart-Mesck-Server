@@ -281,12 +281,20 @@ def generate_report_observation(observation_data_array):
 
     for observation_data in observation_data_array:
         # Convertir la cadena de fecha a un objeto datetime
-        fecha_objeto = datetime.fromisoformat(observation_data["meta"]["lastUpdated"])
+        fecha_objeto = datetime.fromisoformat(
+            observation_data.get("meta", {}).get("lastUpdated", "1900-01-01T00:00:00")
+        )
         fecha_formateada = fecha_objeto.strftime("%Y-%m-%d %H:%M:%S")
 
         # Agregar subtítulo con el display del code del recurso
-        code_display = observation_data["code"]["coding"][0]["display"]
-        code_system = observation_data["code"]["coding"][0]["system"]
+        code_display = (
+            observation_data.get("code", {})
+            .get("coding", [{}])[0]
+            .get("display", "N/A")
+        )
+        code_system = (
+            observation_data.get("code", {}).get("coding", [{}])[0].get("system", "N/A")
+        )
         subtitle = Paragraph(
             f"<b>{code_display}</b> - Sistema: {code_system}", styles["Heading2"]
         )
@@ -294,55 +302,76 @@ def generate_report_observation(observation_data_array):
         story.append(Spacer(1, 12))
 
         observation_info = [
-            ["ID de Observación", Paragraph(observation_data["id"], styles["Normal"])],
+            [
+                "ID de Observación",
+                Paragraph(observation_data.get("id", "N/A"), styles["Normal"]),
+            ],
             ["Última Actualización", Paragraph(fecha_formateada, styles["Normal"])],
-            ["Estado", Paragraph(observation_data["status"], styles["Normal"])],
+            [
+                "Estado",
+                Paragraph(observation_data.get("status", "N/A"), styles["Normal"]),
+            ],
             [
                 "Categoría",
                 Paragraph(
-                    observation_data["category"][0]["coding"][0]["display"],
+                    observation_data.get("category", [{}])[0]
+                    .get("coding", [{}])[0]
+                    .get("display", "N/A"),
                     styles["Normal"],
                 ),
             ],
             [
                 "Código",
                 Paragraph(
-                    observation_data["code"]["coding"][0]["code"], styles["Normal"]
+                    observation_data.get("code", {})
+                    .get("coding", [{}])[0]
+                    .get("code", "N/A"),
+                    styles["Normal"],
                 ),
             ],
-            # [
-            #    "Paciente",
-            #    Paragraph(
-            #        f"{observation_data['subject']['display']}", styles["Normal"]
-            #    ),
-            # ],
             [
                 "Encuentro",
                 Paragraph(
-                    f"{observation_data['encounter']['display']}", styles["Normal"]
+                    observation_data.get("encounter", {}).get("display", "N/A"),
+                    styles["Normal"],
                 ),
             ],
-            ["Emitido el", Paragraph(observation_data["issued"], styles["Normal"])],
+            [
+                "Emitido el",
+                Paragraph(observation_data.get("issued", "N/A"), styles["Normal"]),
+            ],
             [
                 "Performer",
                 Paragraph(
-                    f"{observation_data['performer'][0]['display']}", styles["Normal"]
+                    observation_data.get("performer", [{}])[0].get("display", "N/A"),
+                    styles["Normal"],
                 ),
             ],
-            ["Valor", Paragraph(observation_data["valueString"], styles["Normal"])],
+            [
+                "Valor",
+                Paragraph(observation_data.get("valueString", "N/A"), styles["Normal"]),
+            ],
             [
                 "Interpretación",
                 Paragraph(
                     ", ".join(
                         [
-                            f"{code['display']} (Código: {code['code']})"
-                            for code in observation_data["interpretation"][0]["coding"]
+                            f"{code.get('display', 'N/A')} (Código: {code.get('code', 'N/A')})"
+                            for code in observation_data.get("interpretation", [{}])[
+                                0
+                            ].get("coding", [])
                         ]
                     ),
                     styles["Normal"],
                 ),
             ],
-            ["Notas", Paragraph(observation_data["note"][0]["text"], styles["Normal"])],
+            [
+                "Notas",
+                Paragraph(
+                    observation_data.get("note", [{}])[0].get("text", "N/A"),
+                    styles["Normal"],
+                ),
+            ],
         ]
 
         # Create a table with the observation info
@@ -379,8 +408,12 @@ def generate_report_condition(condition_data_array):
 
     for condition_data in condition_data_array:
         # Agregar subtítulo con el display del code del recurso
-        code_display = condition_data["code"]["coding"][0]["display"]
-        code_system = condition_data["code"]["coding"][0]["system"]
+        code_display = (
+            condition_data.get("code", {}).get("coding", [{}])[0].get("display", "N/A")
+        )
+        code_system = (
+            condition_data.get("code", {}).get("coding", [{}])[0].get("system", "N/A")
+        )
         subtitle = Paragraph(
             f"<b>{code_display}</b> - Sistema: {code_system}", styles["Heading2"]
         )
@@ -389,37 +422,56 @@ def generate_report_condition(condition_data_array):
 
         # Condition details
         condition_info = [
-            ["ID de Condición", Paragraph(condition_data["id"], styles["Normal"])],
+            [
+                "ID de Condición",
+                Paragraph(condition_data.get("id", "N/A"), styles["Normal"]),
+            ],
             [
                 "Última Actualización",
-                Paragraph(condition_data["meta"]["lastUpdated"], styles["Normal"]),
+                Paragraph(
+                    condition_data.get("meta", {}).get("lastUpdated", "N/A"),
+                    styles["Normal"],
+                ),
             ],
             [
                 "Estado Clínico",
                 Paragraph(
-                    condition_data["clinicalStatus"]["coding"][0]["code"],
+                    condition_data.get("clinicalStatus", {})
+                    .get("coding", [{}])[0]
+                    .get("code", "N/A"),
                     styles["Normal"],
                 ),
             ],
             [
                 "Código",
                 Paragraph(
-                    condition_data["code"]["coding"][0]["display"], styles["Normal"]
+                    condition_data.get("code", {})
+                    .get("coding", [{}])[0]
+                    .get("display", "N/A"),
+                    styles["Normal"],
                 ),
             ],
-            # [
-            #    "Paciente",
-            #    Paragraph(condition_data["subject"]["display"], styles["Normal"]),
-            # ],
             [
                 "Encuentro",
-                Paragraph(condition_data["encounter"]["display"], styles["Normal"]),
+                Paragraph(
+                    condition_data.get("encounter", {}).get("display", "N/A"),
+                    styles["Normal"],
+                ),
             ],
             [
                 "Registrador",
-                Paragraph(condition_data["recorder"]["display"], styles["Normal"]),
+                Paragraph(
+                    condition_data.get("recorder", {}).get("display", "N/A"),
+                    styles["Normal"],
+                ),
             ],
-            ["Notas", Paragraph(condition_data["note"][0]["text"], styles["Normal"])],
+            [
+                "Notas",
+                Paragraph(
+                    condition_data.get("note", [{}])[0].get("text", "N/A"),
+                    styles["Normal"],
+                ),
+            ],
         ]
 
         # Create a table with the condition info
@@ -482,6 +534,7 @@ def generate_report_user(patient):
     story = []
 
     patient_data = parse_patient_info(patient)
+    print(patient_data)
     # Define the title and style
     styles = getSampleStyleSheet()
     title_style = styles["Title"]
@@ -769,7 +822,6 @@ async def get_sensor_data(patient_id: str, db: db_dependency):
     for (
         encounter_id,
         sensor_type,
-        timestamp_epoch,
         min_value,
         max_value,
         avg_value,
@@ -790,6 +842,6 @@ async def get_sensor_data(patient_id: str, db: db_dependency):
             "start": start_datetime.strftime("%H:%M:%S"),
             "end": end_datetime.strftime("%H:%M:%S"),
             "duration": str(duration).split(".")[0],  # Format duration to HH:MM:SS
-            "timestamp_epoch": timestamp_epoch,
+            "timestamp_epoch": start_datetime,
         }
     return results

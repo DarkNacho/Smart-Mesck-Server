@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            border: 2px solid black;
+            border-radius: 10px;
+        }
+
+        .report-header {
+            background-color: #eae9e9;
+            color: black;
+            padding: 10px;
+            margin: 0 0 0 0;
+            border-radius: 5px;
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: auto auto;
+        }
+
+        .report-header h2 {
+            margin: 0;
+            grid-column: 1 / 2;
+            grid-row: 1 / 2;
+        }
+
+        .report-header h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: normal;
+            grid-column: 1 / 2;
+            grid-row: 2 / 3;
+        }
+
+        .report-details {
+            border-radius: 5px;
+        }
+
+        .report-details table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+            border-radius: 5px;
+        }
+
+        .report-details th,
+        .report-details td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        .report-details th {
+            background-color: #234a92;
+            text-align: right;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="report-header">
+            <h2>{{title}}</h2>
+            {% if subtitle %}
+            <h3>{{ subtitle }}</h3>
+            {% endif %}
+        </div>
+        <div class="report-details">
+            <table>
+                <tr>
+                    {% for header in header_list %}
+                    <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    {% for data in table_data %}
+                    <td>{{ data.value }}</td>
+                    {% endfor %}
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div style="margin-top: 30px; background-color: white;"></div>
+</body>
+
+</html>
