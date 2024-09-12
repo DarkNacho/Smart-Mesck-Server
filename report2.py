@@ -601,21 +601,19 @@ def render_template(template_file, context):
 
 
 def generate_pdf(html_content, pdf_file, css_path=None):
-    # config = pdfkit.configuration(
-    #    wkhtmltopdf="C:/Program Files/wkhtmltopdf/bin/wkhtmltopdf.exe"
-    # )
-
+    config = pdfkit.configuration(
+        wkhtmltopdf="C:/Program Files/wkhtmltopdf/bin/wkhtmltopdf.exe"
+    )
     options = {
         "quiet": "",
         "enable-local-file-access": "",
         "header-html": "header.html",
         "footer-html": "footer.html",
     }
-    # pdfkit.from_string(
-    #        html_content, pdf_file, configuration=config, options=options, css=css_path
-    #    )
     try:
-        pdfkit.from_string(html_content, pdf_file, options=options, css=css_path)
+        pdfkit.from_string(
+            html_content, pdf_file, configuration=config, options=options, css=css_path
+        )
     except IOError as e:
         print(e)
 

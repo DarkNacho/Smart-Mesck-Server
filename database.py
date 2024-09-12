@@ -8,9 +8,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-# DB_URL = os.getenv("DB_URL")
-DB_FILE = "sqlite:///database.db"
-engine = create_engine(DB_FILE, echo=True)
+DB_URL = os.getenv("DB_URL")
+# DB_FILE = "sqlite:///database.db"
+engine = create_engine(DB_URL, echo=True)
 
 
 def create_database():
@@ -150,6 +150,6 @@ if __name__ == "__main__":
 
     # if os.path.exists(DB_FILE):
     #    os.remove(DB_FILE)
-    create_database()
+    # create_database()
     generate_random_data()
     # populate_db()
