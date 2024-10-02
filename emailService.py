@@ -49,10 +49,10 @@ class EmailService:
         self.password = password
 
     def send_mail(self, message):
-        server = smtplib.SMTP_SSL(self.smtp_server, self.port)
+        # server = smtplib.SMTP_SSL(self.smtp_server, self.port)
 
-        # server = smtplib.SMTP(self.smtp_server, self.port)
-        # server.starttls()
+        server = smtplib.SMTP(self.smtp_server, self.port)
+        server.starttls()
 
         server.login(self.username, self.password)
 
