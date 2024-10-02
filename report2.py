@@ -7,7 +7,7 @@ from jinja2 import Environment, FileSystemLoader
 import tempfile
 
 
-from typing import Annotated
+from typing import Annotated, Optional
 from fastapi import (
     APIRouter,
     Depends,
@@ -45,6 +45,7 @@ async def generate_patient_report(
     med: bool = False,
     cond: bool = False,
     sensor: bool = False,
+    encounter_id: Optional[str] = None,
 ):
     try:
         patient = await fetch_resource("Patient", patient_id, token)
@@ -54,23 +55,26 @@ async def generate_patient_report(
         sensor_data = []
         condition_data = []
 
+        params = {"patient": patient_id}
+        if encounter_id:
+            params["encounter"] = encounter_id
+
         if obs:
-            data = await fetch_resources("Observation", {"patient": patient_id}, token)
+            data = await fetch_resources("Observation", params, token)
             observations_data = [item["resource"] for item in data.get("entry", [])]
 
-        if sensor:
-            pass
-            sensor_data = await get_sensor_data(patient_id, db)
-
-        if med:
-            data = await fetch_resources(
-                "MedicationStatement", {"patient": patient_id}, token
-            )
-            medication_data = [item["resource"] for item in data.get("entry", [])]
-
         if cond:
-            data = await fetch_resources("Condition", {"patient": patient_id}, token)
+            data = await fetch_resources("Condition", params, token)
             condition_data = [item["resource"] for item in data.get("entry", [])]
+
+        if (
+            sensor
+        ):  # TODO: hacer una get sensor_data para sólo un encuentro (que muestre los datos de ese sensor y no sólo el promedio)
+            sensor_data = await get_sensor_data(patient_id, db, encounter_id)
+
+        if med and not encounter_id:
+            data = await fetch_resources("MedicationStatement", params, token)
+            medication_data = [item["resource"] for item in data.get("entry", [])]
 
         pdf_file = generate_report(
             patient_data=patient,
@@ -79,6 +83,10 @@ async def generate_patient_report(
             medication_data_array=medication_data,
             condition_data_array=condition_data,
         )
+
+        patient_info = parse_patient_info(patient)
+        patient_name = patient_info.get("Name").replace(" ", "_")
+        patient_rut = patient_info.get("RUT")
 
         # patient_data = await fetch_resource("Patient", patient_id, token)
         # return parse_patient_info(patient)
@@ -95,7 +103,9 @@ async def generate_patient_report(
         return StreamingResponse(
             io.BytesIO(pdf_file),
             media_type="application/pdf",
-            headers={"Content-Disposition": "attachment; filename=report.pdf"},
+            headers={
+                "Content-Disposition": f"attachment; filename={patient_rut}_{patient_name}_reporte.pdf"
+            },
         )
     except Exception as e:
         print(e)  # For debugging purposes, consider logging this in production
@@ -182,7 +192,7 @@ def sensor_report(data):
                     {"value": sensor_data["max"]},
                     {"value": sensor_data["avg"]},
                     {"value": sensor_data["count"]},
-                    {"value": sensor_data["day"]},
+                    # {"value": sensor_data["day"]},
                     {"value": sensor_data["start"]},
                     {"value": sensor_data["end"]},
                     {"value": sensor_data["duration"]},
@@ -190,7 +200,7 @@ def sensor_report(data):
             )
 
         context = {
-            "title": f"Encounter: {encounter_id}",
+            "title": f"{sensor_data['day']}",
             "table_data": row,
             "header_list": header_table,
         }
@@ -209,8 +219,8 @@ def sensor_report(data):
         plt.plot(stats["timestamp_epoch"], stats["max"], label="Max", marker="o")
         plt.plot(stats["timestamp_epoch"], stats["avg"], label="Avg", marker="o")
         # plt.title(f"{sensor_type} Sensor Data")
-        plt.xlabel("Day")
-        plt.ylabel("Value")
+        plt.xlabel("Día")
+        plt.ylabel("Valor")
         plt.legend()
         plt.tight_layout()
 
@@ -769,23 +779,27 @@ def parse_patient_info(patient):
     return parsed_info
 
 
-async def get_sensor_data(patient_id: str, db: db_dependency):
+async def get_sensor_data(
+    patient_id: str,
+    db: db_dependency,
+    encounter_id: Optional[str] = None,
+):
 
-    query_result = (
-        db.query(
-            SensorData.encounter_id,
-            SensorData.sensor_type,
-            func.min(SensorData.value).label("min_value"),
-            func.max(SensorData.value).label("max_value"),
-            func.avg(SensorData.value).label("avg_value"),
-            func.count(SensorData.value).label("count"),
-            func.min(SensorData.timestamp_epoch).label("start_time"),
-            func.max(SensorData.timestamp_epoch).label("end_time"),
-        )
-        .filter(SensorData.patient_id == patient_id)
-        .group_by(SensorData.encounter_id, SensorData.sensor_type)
-        .all()
-    )
+    query = db.query(
+        SensorData.encounter_id,
+        SensorData.sensor_type,
+        func.min(SensorData.value).label("min_value"),
+        func.max(SensorData.value).label("max_value"),
+        func.avg(SensorData.value).label("avg_value"),
+        func.count(SensorData.value).label("count"),
+        func.min(SensorData.timestamp_epoch).label("start_time"),
+        func.max(SensorData.timestamp_epoch).label("end_time"),
+    ).filter(SensorData.patient_id == patient_id)
+
+    if encounter_id:
+        query = query.filter(SensorData.encounter_id == encounter_id)
+
+    query_result = query.group_by(SensorData.encounter_id, SensorData.sensor_type).all()
 
     # Preparing the results to return
     results = defaultdict(lambda: defaultdict(dict))

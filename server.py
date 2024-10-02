@@ -22,6 +22,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],  # Exponer el encabezado Content-Disposition
 )
 
 app.include_router(auth_router)
