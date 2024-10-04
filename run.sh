@@ -4,7 +4,7 @@
 LOG_FILE="log.txt"
 
 # Find the process ID (PID) of sensor2.py and kill it
-PID=$(pgrep -f sensor2.py)
+PID=$(pgrep -f server.py)
 if [ ! -z "$PID" ]; then
     echo "Killing existing server.py process with PID: $PID"
     kill $PID
