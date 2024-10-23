@@ -9,7 +9,7 @@ from io import BytesIO
 
 # routes
 from sensor import router as sensor_router
-from sensor2 import router as sensor2_router
+from sensor3 import router as sensor2_router
 from auth import router as auth_router, isAuthorized
 from file_manager import router as file_router
 from report2 import router as reporte_router
@@ -35,6 +35,11 @@ app.include_router(reporte_router)
 @app.get("/test_token")
 async def test(payload=Depends(isAuthorized)):
     return {"payload": payload}
+
+
+@app.get("/javier")
+async def javier():
+    return {"mensaje": "Hola Javier"}
 
 
 @app.get("/generate_qr")

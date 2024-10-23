@@ -15,6 +15,7 @@ class Token(BaseModel):
 class User(SQLModel, table=True):
     __tablename__ = "sm_users"
     id: str = Field(default=None, primary_key=True)
+    fhir_id: Optional[str] = Field(default=None, index=True)  # FHIR ID
     rut: str = Field(unique=True, index=True)
     name: str
     hash_password: str
