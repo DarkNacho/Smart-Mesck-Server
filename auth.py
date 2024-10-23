@@ -32,9 +32,12 @@ db_dependency = Annotated[Session, Depends(get_session)]
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(user: User, db: db_dependency):
+    user_db = db.query(User).filter(User.rut == user.rut).first()
+    if user_db:
+        raise HTTPException(status_code=409, detail="User Already Exists")
+
     if user.hash_password == None:
         newUser = User(
-            id=user.id,
             name=user.name,
             email=user.email,
             hash_password=bcrypt_context.hash(generate_random_password()),
@@ -45,7 +48,6 @@ async def register(user: User, db: db_dependency):
 
     else:
         newUser = User(
-            id=user.id,
             name=user.name,
             email=user.email,
             hash_password=bcrypt_context.hash(user.hash_password),
@@ -71,6 +73,10 @@ async def update_user(user: User, db: db_dependency):
     user_db.name = user.name
     user_db.email = user.email
     user_db.phone_number = user.phone_number
+
+    if user_db.fhir_id is None:
+        user_db.fhir_id = user.fhir_id
+
     db.commit()
 
 
@@ -88,7 +94,7 @@ async def activate_user(token: str, db: db_dependency):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("id")
-        user: User = db.query(User).filter(User.id == user_id).first()
+        user: User = db.query(User).filter(User.fhir_id == user_id).first()
         if not user:
             return {"error": "Invalid token"}
         user.validate = True
@@ -120,7 +126,7 @@ async def reset_password(
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("id")
-        user: User = db.query(User).filter(User.id == user_id).first()
+        user: User = db.query(User).filter(User.fhir_id == user_id).first()
         user.validate = True
         if not user:
             return {"error": "Invalid token"}
@@ -169,7 +175,7 @@ async def get_current_user(db: db_dependency, token: str = Depends(oauth2_bearer
 def create_access_token(user: User):
     payload = {
         "sub": user.email,
-        "id": user.id,
+        "id": user.fhir_id,
         "name": user.name,
         "role": user.role,
         "exp": time.time() + ACCESS_TOKEN_EXPIRE_MINUTES * 60,
@@ -180,7 +186,7 @@ def create_access_token(user: User):
 def generate_restart_token(user: User, delta: timedelta = timedelta(days=3)):
     payload = {
         "sub": user.email,
-        "id": user.id,
+        "id": user.fhir_id,
         "exp": time.time() + delta.total_seconds() + (ACCESS_TOKEN_EXPIRE_MINUTES * 60),
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
