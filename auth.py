@@ -3,7 +3,7 @@ import time
 from fastapi import APIRouter, Depends, Form, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
-from typing import Annotated
+from typing import Annotated, Optional
 from sqlmodel import Session
 from database import get_session
 from starlette import status
@@ -15,6 +15,7 @@ import random
 import string
 import os
 from dotenv import load_dotenv
+import requests
 
 load_dotenv()
 
@@ -30,8 +31,36 @@ oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/token")
 db_dependency = Annotated[Session, Depends(get_session)]
 
 
+def validate_resource_fhir(token: str, resource_type: str, resource_id: str) -> bool:
+    if not token or not resource_id or not resource_type:
+        raise ValueError("Token, resource_id and resource_type are required")
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    try:
+        response = requests.get(
+            f"{HAPI_FHIR_URL}/{resource_type}/{resource_id}", headers=headers
+        )  ## call the FHIR server to get the patient data, if you can get it is valid and you actually have authorization to access it.
+        response.raise_for_status()
+        return True
+    except requests.HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+        return False
+    except Exception as err:
+        print(f"Other error occurred: {err}")
+        return False
+
+
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register(user: User, db: db_dependency):
+async def register(user: User, db: db_dependency, token: str = Depends(oauth2_bearer)):
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    role = payload.get("role")
+    if role == "Patient":
+        raise HTTPException(
+            status_code=403, detail="You are not authorized to access this resource"
+        )
+    #!WARNING: it asumes that all others roles are authorized to create users
+
     user_db = db.query(User).filter(User.rut == user.rut).first()
     if user_db:
         raise HTTPException(status_code=409, detail="User Already Exists")
@@ -44,6 +73,7 @@ async def register(user: User, db: db_dependency):
             rut=user.rut,
             phone_number=user.phone_number,
             role=user.role,
+            fhir_id=user.fhir_id,
         )
 
     else:
@@ -54,6 +84,7 @@ async def register(user: User, db: db_dependency):
             rut=user.rut,
             phone_number=user.phone_number,
             role=user.role,
+            fhir_id=user.fhir_id,
         )
 
     db.add(newUser)
@@ -65,17 +96,54 @@ async def register(user: User, db: db_dependency):
     send_email([newUser.email], "Confirma tu cuenta", msg)
 
 
+@router.get("/find", status_code=status.HTTP_200_OK)
+async def find_user(
+    db: db_dependency,
+    user_id: Optional[int] = None,
+    fhir_id: Optional[str] = None,
+    rut: Optional[str] = None,
+    token: str = Depends(oauth2_bearer),
+):
+
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    role = payload.get("role")
+    if role == "Patient":
+        raise HTTPException(
+            status_code=403, detail="You are not authorized to access this resource"
+        )
+
+    if user_id:
+        user = db.query(User).filter(User.id == user_id).first()
+    elif fhir_id:
+        user = db.query(User).filter(User.fhir_id == fhir_id).first()
+    elif rut:
+        user = db.query(User).filter(User.rut == rut).first()
+    else:
+        raise HTTPException(status_code=400, detail="No valid search key provided")
+
+    return {"data": True if user else False}
+
+
 @router.put("/update", status_code=status.HTTP_200_OK)
-async def update_user(user: User, db: db_dependency):
+async def update_user(
+    user: User, db: db_dependency, token: str = Depends(oauth2_bearer)
+):
+
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    user_id = payload.get("id")
+    resource_type = "Patient" if user.role == "Patient" else "Practitioner"
+    canAccess = validate_resource_fhir(token, resource_type, user_id)
+    if not canAccess:
+        raise HTTPException(
+            status_code=403, detail="You are not authorized to access this resource"
+        )
+
     user_db = db.query(User).filter(User.rut == user.rut).first()
     if user_db is None:
         raise HTTPException(status_code=404, detail="User not found")
     user_db.name = user.name
     user_db.email = user.email
     user_db.phone_number = user.phone_number
-
-    if user_db.fhir_id is None:
-        user_db.fhir_id = user.fhir_id
 
     db.commit()
 
@@ -137,39 +205,39 @@ async def reset_password(
         return {"error": "Invalid token"}
 
 
-@router.get("/users/me")
-async def get_current_user(db: db_dependency, token: str = Depends(oauth2_bearer)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-        user_id: str = payload.get("id")
-        if user_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
+# @router.get("/users/me")
+# async def get_current_user(db: db_dependency, token: str = Depends(oauth2_bearer)):
+#     credentials_exception = HTTPException(
+#         status_code=status.HTTP_401_UNAUTHORIZED,
+#         detail="Could not validate credentials",
+#         headers={"WWW-Authenticate": "Bearer"},
+#     )
+#     try:
+#         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+#         user_id: str = payload.get("id")
+#         if user_id is None:
+#             raise credentials_exception
+#     except JWTError:
+#         raise credentials_exception
 
-    user = get_user_by_id(user_id, db)
-    if user is None:
-        raise credentials_exception
-    return user
+#     user = get_user_by_id(user_id, db)
+#     if user is None:
+#         raise credentials_exception
+#     return user
 
 
-@router.get("/users")
-async def get_current_user(db: db_dependency, token: str = Depends(oauth2_bearer)):
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    user_id: str = payload.get("id")
-    if user_id is None:
-        return {"error": "no id in token"}
-    # user = get_user_by_id(int(user_id))
-    user = db.get(User, user_id)
-    if user is None:
-        return {"error": "no user found with that id"}
+# @router.get("/users")
+# async def get_current_user(db: db_dependency, token: str = Depends(oauth2_bearer)):
+#     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+#     user_id: str = payload.get("id")
+#     if user_id is None:
+#         return {"error": "no id in token"}
+#     # user = get_user_by_id(int(user_id))
+#     user = db.get(User, user_id)
+#     if user is None:
+#         return {"error": "no user found with that id"}
 
-    return user
+#     return user
 
 
 def create_access_token(user: User):

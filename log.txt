@@ -1,0 +1,518 @@
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-17 23:26:47,876 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-17 23:26:47,904 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-17 23:26:47,906 - DEBUG - interactive is False
+2024-12-17 23:26:47,906 - DEBUG - platform is linux
+2024-12-17 23:26:47,972 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-17 23:26:47,976 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+INFO:     Will watch for changes in these directories: ['/home/darknacho/Smart-Mesck-Server']
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     Started reloader process [3974] using StatReload
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-17 23:26:49,486 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-17 23:26:49,495 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-17 23:26:49,496 - DEBUG - interactive is False
+2024-12-17 23:26:49,496 - DEBUG - platform is linux
+2024-12-17 23:26:49,533 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-17 23:26:49,534 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-17 23:26:49,696 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [3984]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     190.217.200.64:55162 - "GET /docs HTTP/1.1" 200 OK
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/json_schema.py:2158: PydanticJsonSchemaWarning: Default value <function File at 0x7c9cfd5b5580> is not JSON serializable; excluding default from JSON schema [non-serializable-default]
+  warnings.warn(message, PydanticJsonSchemaWarning)
+INFO:     190.217.200.64:55162 - "GET /openapi.json HTTP/1.1" 200 OK
+2024-12-17 23:29:38,051 - DEBUG - Calling on_field_start with no data
+2024-12-17 23:29:38,051 - DEBUG - Calling on_field_name with data[0:10]
+2024-12-17 23:29:38,051 - DEBUG - Calling on_field_end with no data
+2024-12-17 23:29:38,051 - DEBUG - Calling on_field_start with no data
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_name with data[12:20]
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_data with data[21:30]
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_end with no data
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_start with no data
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_name with data[31:39]
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_data with data[40:49]
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_end with no data
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_start with no data
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_name with data[50:55]
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_end with no data
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_start with no data
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_name with data[57:66]
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_end with no data
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_start with no data
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_name with data[68:81]
+2024-12-17 23:29:38,052 - DEBUG - Calling on_field_end with no data
+2024-12-17 23:29:38,052 - DEBUG - Calling on_end with no data
+2024-12-17 23:29:38,102 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2024-12-17 23:29:38,102 - INFO - select pg_catalog.version()
+2024-12-17 23:29:38,102 INFO sqlalchemy.engine.Engine [raw sql] {}
+2024-12-17 23:29:38,102 - INFO - [raw sql] {}
+2024-12-17 23:29:38,103 INFO sqlalchemy.engine.Engine select current_schema()
+2024-12-17 23:29:38,103 - INFO - select current_schema()
+2024-12-17 23:29:38,104 INFO sqlalchemy.engine.Engine [raw sql] {}
+2024-12-17 23:29:38,104 - INFO - [raw sql] {}
+2024-12-17 23:29:38,106 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2024-12-17 23:29:38,106 - INFO - show standard_conforming_strings
+2024-12-17 23:29:38,106 INFO sqlalchemy.engine.Engine [raw sql] {}
+2024-12-17 23:29:38,106 - INFO - [raw sql] {}
+2024-12-17 23:29:38,107 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2024-12-17 23:29:38,107 - INFO - BEGIN (implicit)
+2024-12-17 23:29:38,112 INFO sqlalchemy.engine.Engine SELECT sm_users.id AS sm_users_id, sm_users.fhir_id AS sm_users_fhir_id, sm_users.rut AS sm_users_rut, sm_users.name AS sm_users_name, sm_users.hash_password AS sm_users_hash_password, sm_users.role AS sm_users_role, sm_users."secondaryRoles" AS "sm_users_secondaryRoles", sm_users.email AS sm_users_email, sm_users.phone_number AS sm_users_phone_number, sm_users.validate AS sm_users_validate 
+FROM sm_users 
+WHERE sm_users.rut = %(rut_1)s 
+ LIMIT %(param_1)s
+2024-12-17 23:29:38,112 - INFO - SELECT sm_users.id AS sm_users_id, sm_users.fhir_id AS sm_users_fhir_id, sm_users.rut AS sm_users_rut, sm_users.name AS sm_users_name, sm_users.hash_password AS sm_users_hash_password, sm_users.role AS sm_users_role, sm_users."secondaryRoles" AS "sm_users_secondaryRoles", sm_users.email AS sm_users_email, sm_users.phone_number AS sm_users_phone_number, sm_users.validate AS sm_users_validate 
+FROM sm_users 
+WHERE sm_users.rut = %(rut_1)s 
+ LIMIT %(param_1)s
+2024-12-17 23:29:38,112 INFO sqlalchemy.engine.Engine [generated in 0.00021s] {'rut_1': '198625388', 'param_1': 1}
+2024-12-17 23:29:38,112 - INFO - [generated in 0.00021s] {'rut_1': '198625388', 'param_1': 1}
+2024-12-17 23:29:38,121 - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-17 23:29:38,124 - DEBUG - detected 'bcrypt' backend, version '<unknown>'
+2024-12-17 23:29:38,124 - DEBUG - 'bcrypt' backend lacks $2$ support, enabling workaround
+2024-12-17 23:29:38,377 INFO sqlalchemy.engine.Engine ROLLBACK
+2024-12-17 23:29:38,377 - INFO - ROLLBACK
+INFO:     190.217.200.64:55297 - "POST /auth/token HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3984]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-17 23:42:59,183 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-17 23:42:59,198 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-17 23:42:59,199 - DEBUG - interactive is False
+2024-12-17 23:42:59,199 - DEBUG - platform is linux
+2024-12-17 23:42:59,247 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-17 23:42:59,250 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-17 23:42:59,456 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [6479]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     190.217.200.64:55703 - "GET /docs HTTP/1.1" 200 OK
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/json_schema.py:2158: PydanticJsonSchemaWarning: Default value <function File at 0x793d2eeb5580> is not JSON serializable; excluding default from JSON schema [non-serializable-default]
+  warnings.warn(message, PydanticJsonSchemaWarning)
+INFO:     190.217.200.64:55703 - "GET /openapi.json HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6479]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-17 23:48:04,129 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-17 23:48:04,139 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-17 23:48:04,140 - DEBUG - interactive is False
+2024-12-17 23:48:04,140 - DEBUG - platform is linux
+2024-12-17 23:48:04,179 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-17 23:48:04,180 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-17 23:48:04,343 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [6546]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6546]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-17 23:49:30,823 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-17 23:49:30,831 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-17 23:49:30,832 - DEBUG - interactive is False
+2024-12-17 23:49:30,832 - DEBUG - platform is linux
+2024-12-17 23:49:30,868 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-17 23:49:30,869 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-17 23:49:31,016 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [6560]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6560]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-17 23:54:44,910 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-17 23:54:44,920 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-17 23:54:44,921 - DEBUG - interactive is False
+2024-12-17 23:54:44,921 - DEBUG - platform is linux
+2024-12-17 23:54:44,961 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-17 23:54:44,963 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-17 23:54:45,143 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [6626]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6626]
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 286, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/darknacho/Smart-Mesck-Server/server.py", line 11, in <module>
+    from sensor import router as sensor_router
+  File "/home/darknacho/Smart-Mesck-Server/sensor.py", line 19, in <module>
+    from auth import decode_token
+  File "/home/darknacho/Smart-Mesck-Server/auth.py", line 100
+    db: db_dependency
+    ^^^^^^^^^^^^^^^^^
+SyntaxError: parameter without a default follows parameter with a default
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 286, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/darknacho/Smart-Mesck-Server/server.py", line 11, in <module>
+    from sensor import router as sensor_router
+  File "/home/darknacho/Smart-Mesck-Server/sensor.py", line 19, in <module>
+    from auth import decode_token
+  File "/home/darknacho/Smart-Mesck-Server/auth.py", line 96
+    db: db_dependency
+        ^^^^^^^^^^^^^
+SyntaxError: invalid syntax. Perhaps you forgot a comma?
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:00:10,726 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:00:10,737 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:00:10,738 - DEBUG - interactive is False
+2024-12-18 00:00:10,738 - DEBUG - platform is linux
+2024-12-18 00:00:10,785 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:00:10,786 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:00:11,075 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [6720]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6720]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:01:24,023 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:01:24,033 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:01:24,034 - DEBUG - interactive is False
+2024-12-18 00:01:24,034 - DEBUG - platform is linux
+2024-12-18 00:01:24,074 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:01:24,076 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:01:24,230 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [6802]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6802]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:02:51,180 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:02:51,189 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:02:51,191 - DEBUG - interactive is False
+2024-12-18 00:02:51,191 - DEBUG - platform is linux
+2024-12-18 00:02:51,236 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:02:51,237 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:02:51,415 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [6823]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6823]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:04:21,217 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:04:21,228 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:04:21,229 - DEBUG - interactive is False
+2024-12-18 00:04:21,230 - DEBUG - platform is linux
+2024-12-18 00:04:21,275 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:04:21,276 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:04:21,495 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [6839]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6839]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:04:24,628 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:04:24,639 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:04:24,641 - DEBUG - interactive is False
+2024-12-18 00:04:24,641 - DEBUG - platform is linux
+2024-12-18 00:04:24,685 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:04:24,687 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:04:24,923 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [6848]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6848]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:16:05,135 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:16:05,200 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:16:05,202 - DEBUG - interactive is False
+2024-12-18 00:16:05,202 - DEBUG - platform is linux
+2024-12-18 00:16:05,376 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:16:05,381 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:16:05,793 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [7005]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7005]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:19:44,886 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:19:44,900 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:19:44,902 - DEBUG - interactive is False
+2024-12-18 00:19:44,902 - DEBUG - platform is linux
+2024-12-18 00:19:44,960 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:19:44,961 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:19:45,188 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [7058]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7058]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:19:53,997 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:19:54,006 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:19:54,007 - DEBUG - interactive is False
+2024-12-18 00:19:54,008 - DEBUG - platform is linux
+2024-12-18 00:19:54,054 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:19:54,055 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:19:54,228 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [7068]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7068]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:19:56,439 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:19:56,449 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:19:56,450 - DEBUG - interactive is False
+2024-12-18 00:19:56,451 - DEBUG - platform is linux
+2024-12-18 00:19:56,498 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:19:56,500 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:19:56,698 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [7072]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'models.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7072]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:19:59,847 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:19:59,858 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:19:59,860 - DEBUG - interactive is False
+2024-12-18 00:19:59,860 - DEBUG - platform is linux
+2024-12-18 00:19:59,907 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:19:59,908 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:20:00,094 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [7085]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'sensor2.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7085]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:31:23,259 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:31:23,289 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:31:23,290 - DEBUG - interactive is False
+2024-12-18 00:31:23,290 - DEBUG - platform is linux
+2024-12-18 00:31:23,408 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:31:23,411 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:31:23,730 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [7409]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'server.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7409]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:31:39,187 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:31:39,195 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:31:39,197 - DEBUG - interactive is False
+2024-12-18 00:31:39,197 - DEBUG - platform is linux
+2024-12-18 00:31:39,229 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:31:39,230 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:31:39,380 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [7435]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'auth.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7435]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:32:23,448 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:32:23,457 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:32:23,458 - DEBUG - interactive is False
+2024-12-18 00:32:23,458 - DEBUG - platform is linux
+2024-12-18 00:32:23,496 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:32:23,497 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:32:23,642 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [7471]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'sensor2.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7471]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:33:11,183 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:33:11,192 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:33:11,193 - DEBUG - interactive is False
+2024-12-18 00:33:11,194 - DEBUG - platform is linux
+2024-12-18 00:33:11,232 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:33:11,233 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:33:11,389 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [7489]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'sensor2.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7489]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:44:07,405 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:44:07,418 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:44:07,419 - DEBUG - interactive is False
+2024-12-18 00:44:07,419 - DEBUG - platform is linux
+2024-12-18 00:44:07,473 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:44:07,474 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:44:07,682 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [7582]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'sensor2.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7582]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 00:49:17,743 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 00:49:17,775 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 00:49:17,776 - DEBUG - interactive is False
+2024-12-18 00:49:17,776 - DEBUG - platform is linux
+2024-12-18 00:49:17,870 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 00:49:17,874 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 00:49:18,107 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [7633]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'report/report2.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7633]
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122, in spawn_main
+    exitcode = _main(fd, parent_sentinel)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 131, in _main
+    prepare(preparation_data)
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 246, in prepare
+    _fixup_main_from_path(data['init_main_from_path'])
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 297, in _fixup_main_from_path
+    main_content = runpy.run_path(main_path,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 286, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/darknacho/Smart-Mesck-Server/server.py", line 15, in <module>
+    from report2 import router as reporte_router
+ModuleNotFoundError: No module named 'report2'
+WARNING:  StatReload detected changes in 'server.py'. Reloading...
+/home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/pydantic/_internal/_fields.py:200: UserWarning: Field name "validate" in "User" shadows an attribute in parent "SQLModel"
+  warnings.warn(
+2024-12-18 01:13:07,068 - DEBUG - matplotlib data path: /home/darknacho/Smart-Mesck-Server/venv/lib/python3.12/site-packages/matplotlib/mpl-data
+2024-12-18 01:13:07,088 - DEBUG - CONFIGDIR=/home/darknacho/.config/matplotlib
+2024-12-18 01:13:07,089 - DEBUG - interactive is False
+2024-12-18 01:13:07,090 - DEBUG - platform is linux
+2024-12-18 01:13:07,166 - DEBUG - CACHEDIR=/home/darknacho/.cache/matplotlib
+2024-12-18 01:13:07,168 - DEBUG - Using fontManager instance from /home/darknacho/.cache/matplotlib/fontlist-v390.json
+2024-12-18 01:13:07,394 - DEBUG - Using selector: EpollSelector
+INFO:     Started server process [9659]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9659]
+INFO:     Stopping reloader process [3974]

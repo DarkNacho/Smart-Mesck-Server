@@ -5,6 +5,7 @@
     "castudillo",
     "dotenv",
     "fastapi",
+    "fhir",
     "FHIR",
     "HAPI",
     "jose",
@@ -12,6 +13,7 @@
     "Mesck",
     "millis",
     "passlib",
+    "pycache",
     "pydantic",
     "sessionmaker",
     "sqlalchemy",
@@ -19,6 +21,7 @@
     "sqlmodel",
     "starlette",
     "uvicorn",
+    "venv",
     "websockets"
   ]
 }

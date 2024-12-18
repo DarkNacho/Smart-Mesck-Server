@@ -31,6 +31,7 @@ from sqlalchemy import func
 from auth import isAuthorized
 from database import get_session
 from jwt import generate_token_with_payload as generate_token
+from auth import validate_resource_fhir
 
 
 load_dotenv()
@@ -40,6 +41,7 @@ router = APIRouter(prefix="/sensor2", tags=["sensor"])
 arduino_clients = set()
 dashboard_clients = defaultdict(list)
 data_buffer = defaultdict(list)
+patients_to_monitor = set()
 
 # last_sent_time = time.time()
 
@@ -68,26 +70,6 @@ def items_to_send(sensor_data_list, n=1):
     return items_to_send
 
 
-def validate_patient(token: str, patient_id: str) -> bool:
-    if not token or not patient_id:
-        raise ValueError("Token and patient_id must not be empty")
-
-    headers = {"Authorization": f"Bearer {token}"}
-    print("headers:", headers)
-    try:
-        response = requests.get(
-            f"{HAPI_FHIR_URL}/Patient/{patient_id}", headers=headers
-        )  ## call the FHIR server to get the patient data, if you can get it is valid and you actually have authorization to access it.
-        response.raise_for_status()
-        return True
-    except requests.HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
-        return False
-    except Exception as err:
-        print(f"Other error occurred: {err}")
-        return False
-
-
 @router.websocket("/arduino_ws")
 async def arduino_websocket(
     websocket: WebSocket, token: str, db: db_dependency, encounter_id: str = None
@@ -95,6 +77,7 @@ async def arduino_websocket(
     try:
         print("Connecting to websocket...")
         payload = await decode_token(token)
+        patient_id = payload.get("id")
         print("payload:", payload)
         print("token:", token)
         await websocket.accept()
@@ -119,7 +102,8 @@ async def arduino_websocket(
 
     # await websocket.accept()
     arduino_clients.add(websocket)
-    await asyncio.sleep(5)
+    patients_to_monitor.add(patient_id)
+ 
     print(f"Arduino connected: {websocket.client.host}")
     last_sent_time = time.time()
 
@@ -159,6 +143,7 @@ async def arduino_websocket(
     finally:
         # db.commit()
         arduino_clients.remove(websocket)
+        patients_to_monitor.remove(patient_id)
         print(f"Arduino disconnected: {websocket.client.host}")
 
 
@@ -170,7 +155,7 @@ async def dashboard_websocket(websocket: WebSocket, token: str, patient_id: str)
         print("token:", token)
         print("patient_id:", patient_id)
 
-        if validate_patient(token, patient_id):
+        if validate_resource_fhir(token, "Patient", patient_id):
             await websocket.accept()
         else:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
@@ -189,9 +174,17 @@ async def dashboard_websocket(websocket: WebSocket, token: str, patient_id: str)
     )  ## use the patient_id as key to store the websocket that the practitioner wants to monitor
     # dashboard_clients.add(websocket)
     print(f"Dashboard connected: {websocket.client.host}")
+    
+       # Check if the patient is being monitored
+    if patient_id not in patients_to_monitor:
+        await websocket.send_json({"message": "No patient to monitor"})
+    else:
+        await websocket.send_json({"message": "Patient is being monitored but no data is being received"})
+
+
     try:
         while True:
-            websocket.send_json({"message": "Connected"})
+            websocket.send_json({"message": f"Connected to dashboard for patient_id {patient_id}"})
             # Dashboard clients can listen for JSON data sent by Arduino devices
             data = await websocket.receive_json()
             print(f"Received JSON data in dashboard: {data}")

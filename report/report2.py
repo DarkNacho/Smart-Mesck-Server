@@ -200,7 +200,7 @@ def sensor_summary_report(data):
 
     context_title = {
         "title": "Reporte Sensores",
-        "img_path": os.path.abspath("icon_sensores.png"),
+        "img_path": os.path.abspath("report/static/icon_sensores.png"),
     }
 
     html = render_template("template_title.html", context_title)
@@ -252,7 +252,7 @@ def sensor_summary_report(data):
 
     context_title = {
         "title": "Gráficas Reporte Sensores",
-        "img_path": os.path.abspath("icon_sensores.png"),
+        "img_path": os.path.abspath("report/static/icon_sensores.png"),
     }
 
     html += render_template("template_title.html", context_title)
@@ -274,7 +274,7 @@ def sensor_summary_report(data):
 
         context_graph = {
             "title": f"{sensor_type} en el tiempo",
-            "img_path": os.path.abspath("icon_graph.png"),
+            "img_path": os.path.abspath("report/static/icon_graph.png"),
             "img_data": img_data,
         }
         html += render_template("template_graph.html", context_graph)
@@ -302,7 +302,7 @@ def sensor_summary_report(data):
 
         context_graph = {
             "title": f"{sensor_type} Estadísticas",
-            "img_path": os.path.abspath("icon_graph.png"),
+            "img_path": os.path.abspath("report/static/icon_graph.png"),
             "img_data": img_data,
         }
         html += render_template("template_graph.html", context_graph)
@@ -314,7 +314,7 @@ def sensor_summary_report(data):
 def medication_report(medication_data_array):
     context_title = {
         "title": "Reporte Medicamentos",
-        "img_path": os.path.abspath("icon_med.png"),
+        "img_path": os.path.abspath("report/static/icon_med.png"),
     }
 
     html = render_template("template_title.html", context_title)
@@ -433,7 +433,7 @@ def medication_report(medication_data_array):
 def observation_report(observations):
     context_title = {
         "title": "Reporte Observaciones",
-        "img_path": os.path.abspath("icon_obs.png"),
+        "img_path": os.path.abspath("report/static/icon_obs.png"),
     }
 
     html = render_template("template_title.html", context_title)
@@ -551,7 +551,7 @@ def observation_report(observations):
 def condition_report(condition_data_array):
     context_title = {
         "title": "Reporte Condiciones",
-        "img_path": os.path.abspath("icon_cond.png"),
+        "img_path": os.path.abspath("report/static/icon_cond.png"),
     }
 
     html = render_template("template_title.html", context_title)
@@ -640,7 +640,7 @@ def calculate_age(birthdate: datetime):
 def patient_general_info_report(patient):
     context_title = {
         "title": "Reporte Paciente",
-        "img_path": os.path.abspath("icon_user.png"),
+        "img_path": os.path.abspath("report/static/icon_user.png"),
     }
 
     html = render_template("template_title.html", context_title)
@@ -675,7 +675,8 @@ def patient_general_info_report(patient):
 
 
 def render_template(template_file, context):
-    env = Environment(loader=FileSystemLoader("."))
+    env = Environment(loader=FileSystemLoader("report/templates"))
+    #env = Environment(loader=FileSystemLoader("."))
     template = env.get_template(template_file)
     return template.render(context)
 
@@ -689,8 +690,8 @@ def generate_pdf(html_content, pdf_file, css_path=None):
     options = {
         "quiet": "",
         "enable-local-file-access": "",
-        "header-html": "header.html",
-        "footer-html": "footer.html",
+        "header-html": "report/templates/header.html",
+        "footer-html": "report/templates/footer.html",
     }
     try:
         pdfkit.from_string(
@@ -709,8 +710,8 @@ def generate_pdf_to_byte_array(html_content):
     options = {
         "quiet": "",
         "enable-local-file-access": "",
-        "header-html": "header.html",
-        "footer-html": "footer.html",
+        "header-html": "report/templates/header.html",
+        "footer-html": "report/templates/footer.html",
     }
     # Create a temporary file
     with tempfile.NamedTemporaryFile(delete=False) as tmpfile:

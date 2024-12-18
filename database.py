@@ -33,50 +33,17 @@ def populate_db():
 
     user_nacho = User(
         email="dark_nacho_xd@hotmail.cl",
-        id="6",
-        phone_number="+56912345678",
+        fhir_id="1",
+        phone_number="+56964073739",
         name="Ignacio Martínez",
         rut="198625388",
         validate=True,
-        hash_password=bcrypt_context.hash("nacho"),
+        hash_password=bcrypt_context.hash("nacho1234"),
         role="Practitioner",
     )
 
-    user_admin = User(
-        id="1",
-        name="John Doe",
-        role="Admin",
-        hash_password=bcrypt_context.hash("admin"),
-        rut="rut",
-        phone_number="123-456-7890",
-        validate=True,
-        email="john.doe@example.com",
-    )
-
-    user_practitioner = User(
-        id="204",
-        name="practicante prueba",
-        role="Practitioner",
-        hash_password=bcrypt_context.hash("practitioner"),
-        rut="12552",
-        phone_number="+51313",
-        validate=True,
-        email="dasdd@d31d.com",
-    )
-
-    user_patient = User(
-        id="3",
-        role="Patient",
-        name="Paciente prueba",
-        hash_password=bcrypt_context.hash("patient"),
-        rut="1231252",
-        phone_number="+5111313",
-        validate=True,
-        email="patient@nacho.cl",
-    )
-
-    # session.add(user_nacho)
-    session.add(user_admin)
+    session.add(user_nacho)
+    #session.add(user_admin)
     # session.add(user_practitioner)
     # session.add(user_patient)
 
@@ -150,6 +117,6 @@ if __name__ == "__main__":
 
     # if os.path.exists(DB_FILE):
     #    os.remove(DB_FILE)
-    # create_database()
-    generate_random_data()
-    # populate_db()
+    #create_database()
+    #generate_random_data()
+    populate_db()
