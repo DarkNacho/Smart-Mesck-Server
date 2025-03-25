@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            border: 2px solid black;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+        }
+
+        .report-header {
+            background-color: #eae9e9;
+            color: black;
+            padding: 10px;
+            margin: 0 0 20px 0;
+            border-radius: 5px;
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: auto auto;
+        }
+
+        .report-header h2 {
+            margin: 0;
+            grid-column: 1 / 2;
+            grid-row: 1 / 2;
+        }
+
+        .report-header h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: normal;
+            grid-column: 1 / 2;
+            grid-row: 2 / 3;
+        }
+
+        .report-details {
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .question-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .question-item .question {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .question-item .answer {
+            margin-left: 10px;
+            color: #333;
+        }
+
+        .charts {
+            margin-top: 20px;
+        }
+
+        .charts img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Report Header -->
+        <div class="report-header">
+            <h2>{{ title }}</h2>
+            {% if subtitle %}
+            <h3>{{ subtitle }}</h3>
+            {% endif %}
+        </div>
+
+        <!-- Questionnaire Details -->
+        <div class="report-details">
+            {% for question in questions %}
+            {% if question.answer == "INFO" %}
+            <div class="question-item">
+                <div class="question">{{ question.question }}</div>
+            </div>
+            {% else %}
+            <div class="question-item">
+                <div class="question">{{ question.question }}</div>
+                <div class="answer">{{ question.answer }}</div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Total Score -->
+        {% if total_score %}
+        <div class="report-details">
+            <h3>Total Score: {{ total_score }}</h3>
+        </div>
+        {% endif %}
+
+        <!-- Charts -->
+        {% if charts %}
+        <div class="charts">
+            {% for chart in charts %}
+            <img src="{{ chart }}" alt="Chart">
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>

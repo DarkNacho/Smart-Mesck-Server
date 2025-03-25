@@ -52,47 +52,60 @@ def validate_resource_fhir(token: str, resource_type: str, resource_id: str) -> 
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register(user: User, db: db_dependency, token: str = Depends(oauth2_bearer)):
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    role = payload.get("role")
-    if role == "Patient":
-        raise HTTPException(
-            status_code=403, detail="You are not authorized to access this resource"
-        )
+async def register(
+    user: User, db: db_dependency
+):  # token: str = Depends(oauth2_bearer)
+    # payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    # role = payload.get("role")
+    # if role == "Patient":
+    #    raise HTTPException(
+    #        status_code=403, detail="You are not authorized to access this resource"
+    #    )
     #!WARNING: it asumes that all others roles are authorized to create users
 
     user_db = db.query(User).filter(User.rut == user.rut).first()
     if user_db:
         raise HTTPException(status_code=409, detail="User Already Exists")
 
-    if user.hash_password == None:
-        newUser = User(
-            name=user.name,
-            email=user.email,
-            hash_password=bcrypt_context.hash(generate_random_password()),
-            rut=user.rut,
-            phone_number=user.phone_number,
-            role=user.role,
-            fhir_id=user.fhir_id,
-        )
+    hashed_password = (
+        bcrypt_context.hash(user.hash_password)
+        if user.hash_password
+        else bcrypt_context.hash(generate_random_password())
+    )
 
-    else:
-        newUser = User(
-            name=user.name,
-            email=user.email,
-            hash_password=bcrypt_context.hash(user.hash_password),
-            rut=user.rut,
-            phone_number=user.phone_number,
-            role=user.role,
-            fhir_id=user.fhir_id,
-        )
+    newUser = User(
+        name=user.name,
+        email=user.email,
+        hash_password=hashed_password,
+        rut=user.rut,
+        phone_number=user.phone_number,
+        role=user.role,
+        fhir_id=user.fhir_id,
+        secondaryRoles=user.secondaryRoles,
+    )
 
     db.add(newUser)
     db.commit()
     db.refresh(newUser)
     token = generate_restart_token(newUser)
     smart_mesck_url = os.getenv("SMART_MESCK_URL")
-    msg = f"{newUser.name}, haz sido registrado en Smart-Mesck, haz click <a href='{smart_mesck_url}/?token={token}'>aquí</a> para completar tu registro"
+    # msg = f"{newUser.name}, haz sido registrado en Smart-Mesck, haz click <a href='{smart_mesck_url}/?token={token}'>aquí</a> para completar tu registro"
+
+    msg = f"""
+<p>Estimado/a {newUser.name},</p>
+
+<p>Bienvenido/a a Smart-Mesck. Para completar su registro y crear su contraseña, por favor haga clic en el siguiente enlace:</p>
+
+<p><a href='{smart_mesck_url}/?token={token}'>Crear Contraseña</a></p>
+
+<p>En caso de no poder hacer clic en el enlace, copie y pegue la siguiente URL en su navegador:<br>
+{smart_mesck_url}/?token={token}</p>
+
+<p>Si no solicitó esta cuenta, por favor ignore este correo electrónico.</p>
+
+<p>Atentamente,<br>
+El equipo de Smart-Mesck</p>
+"""
     send_email([newUser.email], "Confirma tu cuenta", msg)
 
 
@@ -102,15 +115,14 @@ async def find_user(
     user_id: Optional[int] = None,
     fhir_id: Optional[str] = None,
     rut: Optional[str] = None,
-    token: str = Depends(oauth2_bearer),
-):
+):  # token: str = Depends(oauth2_bearer),
 
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    role = payload.get("role")
-    if role == "Patient":
-        raise HTTPException(
-            status_code=403, detail="You are not authorized to access this resource"
-        )
+    # payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    # role = payload.get("role")
+    # if role == "Patient":
+    #    raise HTTPException(
+    #        status_code=403, detail="You are not authorized to access this resource"
+    #    )
 
     if user_id:
         user = db.query(User).filter(User.id == user_id).first()
@@ -126,17 +138,17 @@ async def find_user(
 
 @router.put("/update", status_code=status.HTTP_200_OK)
 async def update_user(
-    user: User, db: db_dependency, token: str = Depends(oauth2_bearer)
-):
+    user: User, db: db_dependency
+):  # token: str = Depends(oauth2_bearer),
 
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    user_id = payload.get("id")
-    resource_type = "Patient" if user.role == "Patient" else "Practitioner"
-    canAccess = validate_resource_fhir(token, resource_type, user_id)
-    if not canAccess:
-        raise HTTPException(
-            status_code=403, detail="You are not authorized to access this resource"
-        )
+    # payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    # user_id = payload.get("id")
+    # resource_type = "Patient" if user.role == "Patient" else "Practitioner"
+    # canAccess = validate_resource_fhir(token, resource_type, user_id)
+    # if not canAccess:
+    #    raise HTTPException(
+    #        status_code=403, detail="You are not authorized to access this resource"
+    #    )
 
     user_db = db.query(User).filter(User.rut == user.rut).first()
     if user_db is None:
@@ -181,7 +193,24 @@ async def create_reset_password_token(rut: str, db: db_dependency):
     token = generate_restart_token(user)
 
     smart_mesck_url = os.getenv("SMART_MESCK_URL")
-    msg = f"{user.name}, haz solicitado restaurar su contraseña en Smart-Mesck, haz click <a href='{smart_mesck_url}/?token={token}'>aquí</a> para realizarlo."
+    # msg = f"{user.name}, haz solicitado restaurar su contraseña en Smart-Mesck, haz click <a href='{smart_mesck_url}/?token={token}'>aquí</a> para realizarlo."
+
+    msg = f"""
+<p>Estimado/a {user.name},</p>
+
+<p>Hemos recibido una solicitud para restablecer la contraseña de su cuenta en Smart-Mesck. Si usted realizó esta solicitud, por favor haga clic en el siguiente enlace para proceder con el restablecimiento de su contraseña:</p>
+
+<p><a href='{smart_mesck_url}/?token={token}'>Restablecer Contraseña</a></p>
+
+<p>En caso de no poder hacer clic en el enlace, copie y pegue la siguiente URL en su navegador:<br>
+{smart_mesck_url}/?token={token}</p>
+
+<p>Si no solicitó restablecer su contraseña, por favor ignore este correo electrónico. Su cuenta permanecerá segura.</p>
+
+<p>Atentamente,<br>
+El equipo de Smart-Mesck</p>
+"""
+
     send_email([user.email], "Recuperar Contraseña", msg)
 
     return {"message": "Reset password token created successfully"}

@@ -44,13 +44,7 @@ def validate_token(token: str):
 
 
 if __name__ == "__main__":
-    # Create a token
-    # email = "ignacia.cortes1966@gmail.com"
-    # id = "112"
-    # role = "Patient"
-    # token = generate_token(
-    #    email, id, role, "Ignacia del Carmen Cortés González", delta=timedelta(days=60)
-    # )
+    # WARNING: This is just an example. Do not use hardcoded values in production.
     email = "kisineg556@losvtn.com"
     id = "5"
     role = "Admin"

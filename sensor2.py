@@ -103,9 +103,19 @@ async def arduino_websocket(
     # await websocket.accept()
     arduino_clients.add(websocket)
     patients_to_monitor.add(patient_id)
- 
+
     print(f"Arduino connected: {websocket.client.host}")
     last_sent_time = time.time()
+
+    async def send_keep_alive():
+        while True:
+            await asyncio.sleep(2)  # Send a ping every 10 seconds
+            try:
+                await websocket.send_text("stay alive")
+            except WebSocketDisconnect:
+                break
+
+    keep_alive_task = asyncio.create_task(send_keep_alive())
 
     try:
         while True:
@@ -120,7 +130,7 @@ async def arduino_websocket(
                     sensor_data
                 )
 
-                # db.add(sensor_data)
+                db.add(sensor_data)
 
                 if time.time() - last_sent_time >= 1:
                     for dashboard_client in dashboard_clients[
@@ -135,13 +145,15 @@ async def arduino_websocket(
                     data_buffer.clear()
             except ValidationError:
                 print(f"Validation error for SensorData: {data}")
+                await websocket.send_text("Validation error: " + data)
                 continue
     except asyncio.CancelledError:
         pass
     except WebSocketDisconnect:
         pass
     finally:
-        # db.commit()
+        keep_alive_task.cancel()
+        db.commit()
         arduino_clients.remove(websocket)
         patients_to_monitor.remove(patient_id)
         print(f"Arduino disconnected: {websocket.client.host}")
@@ -174,17 +186,20 @@ async def dashboard_websocket(websocket: WebSocket, token: str, patient_id: str)
     )  ## use the patient_id as key to store the websocket that the practitioner wants to monitor
     # dashboard_clients.add(websocket)
     print(f"Dashboard connected: {websocket.client.host}")
-    
-       # Check if the patient is being monitored
-    if patient_id not in patients_to_monitor:
-        await websocket.send_json({"message": "No patient to monitor"})
-    else:
-        await websocket.send_json({"message": "Patient is being monitored but no data is being received"})
 
+    # Check if the patient is being monitored
+    # if patient_id not in patients_to_monitor:
+    #    await websocket.send_json({"message": "No patient connected to monitor"})
+    # else:
+    #    await websocket.send_json(
+    #        {"message": "Patient is being monitored but no data is being received"}
+    #    )
 
     try:
         while True:
-            websocket.send_json({"message": f"Connected to dashboard for patient_id {patient_id}"})
+            # await websocket.send_json(
+            #    {"message": f"Connected to dashboard for patient_id {patient_id}"}
+            # )
             # Dashboard clients can listen for JSON data sent by Arduino devices
             data = await websocket.receive_json()
             print(f"Received JSON data in dashboard: {data}")

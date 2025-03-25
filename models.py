@@ -14,7 +14,7 @@ class Token(BaseModel):
 
 class User(SQLModel, table=True):
     __tablename__ = "sm_users"
-    #id: str = Field(default=None, primary_key=True)
+    # id: str = Field(default=None, primary_key=True)
     id: Optional[int] = Field(default=None, primary_key=True)
     fhir_id: Optional[str] = Field(unique=True, default=None, index=True)  # FHIR ID
     rut: str = Field(unique=True, index=True)
@@ -88,3 +88,33 @@ class FileUploadModel(SQLModel, table=True):
 
     def generate_hash(self):
         return sha256(self.content).hexdigest()
+
+
+class GameData(SQLModel, table=True):
+    __tablename__ = "sm_game_data"
+    userID: str = Field(default=None, primary_key=True)
+    playTime: float
+    snowHighestScore: float
+    fruitHighestScore: float
+    relaxHighestScore: float
+    carouselHighestScore: float
+
+    def __repr__(self):
+        return (
+            f"GameData(UserID={self.userID}, PlayTime={self.playTime}, "
+            f"SnowHighestScore={self.snowHighestScore}, FruitHighestScore={self.fruitHighestScore}, "
+            f"RelaxHighestScore={self.relaxHighestScore}, CarouselHighestScore={self.carouselHighestScore})"
+        )
+
+    def __str__(self):
+        return self.__repr__()
+
+    def to_dict(self):
+        return {
+            "userID": self.userID,
+            "playTime": self.playTime,
+            "snowHighestScore": self.snowHighestScore,
+            "fruitHighestScore": self.fruitHighestScore,
+            "relaxHighestScore": self.relaxHighestScore,
+            "carouselHighestScore": self.carouselHighestScore,
+        }

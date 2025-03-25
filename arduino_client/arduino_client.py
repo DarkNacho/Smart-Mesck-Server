@@ -2,6 +2,11 @@ import asyncio
 import websockets
 from datetime import datetime
 import random
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from models import SensorData, SensorType
 
 
@@ -11,7 +16,8 @@ async def send_data(websocket, json_data):
 
 async def main():
     # uri = "ws://localhost:8000/sensor2/arduino_ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJraXNpbmVnNTU2QGxvc3Z0bi5jb20iLCJpZCI6IjUiLCJyb2xlIjoiUGF0aWVudCIsIm5hbWUiOiJKdWFuIENhcmxvcyBCb2RvcXVlIiwiZXhwIjoxNzI0NDQ4NDEzLjQyNTIxMX0.m0wCVPlNdG6QJqQs2jN1Zj5nzY37vy1LK4bBoz5mxuc"  # sin ssl
-    uri = "wss://castudillo-chart-server-sm.darknacho.software/sensor2/arduino_ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJraXNpbmVnNTU2QGxvc3Z0bi5jb20iLCJpZCI6IjUiLCJyb2xlIjoiUGF0aWVudCIsIm5hbWUiOiJKdWFuIENhcmxvcyBCb2RvcXVlIiwiZXhwIjoxNzI0NDQ4NDEzLjQyNTIxMX0.m0wCVPlNdG6QJqQs2jN1Zj5nzY37vy1LK4bBoz5mxuc"  # con ssl
+    uri = "ws://alaya.cttn.cl:8088/sensor2/arduino_ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJraXNpbmVnNTU2QGxvc3Z0bi5jb20iLCJpZCI6IjUiLCJyb2xlIjoiQWRtaW4iLCJuYW1lIjoiSnVhbiBDYXJsb3MgQm9kb3F1ZSIsImV4cCI6MTczNDc4MDM2Ny4zODIzMjQ3fQ.3y8DM5csS7bUmEj4tsFBDj4cMvt1m1t79sanTUhGKaQ"  # con ssl
+    # uri = "wss://castudillo-chart-server-sm.darknacho.software/sensor2/arduino_ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJraXNpbmVnNTU2QGxvc3Z0bi5jb20iLCJpZCI6IjUiLCJyb2xlIjoiUGF0aWVudCIsIm5hbWUiOiJKdWFuIENhcmxvcyBCb2RvcXVlIiwiZXhwIjoxNzI0NDQ4NDEzLjQyNTIxMX0.m0wCVPlNdG6QJqQs2jN1Zj5nzY37vy1LK4bBoz5mxuc"  # con ssl
     # uri = "wss://dn-server.darknacho.software/sensor2/arduino_ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJraXNpbmVnNTU2QGxvc3Z0bi5jb20iLCJpZCI6IjUiLCJyb2xlIjoiUGF0aWVudCIsIm5hbWUiOiJKdWFuIENhcmxvcyBCb2RvcXVlIiwiZXhwIjoxNzI0NDQ4NDEzLjQyNTIxMX0.m0wCVPlNdG6QJqQs2jN1Zj5nzY37vy1LK4bBoz5mxuc"  # con ssl"
     # uri = "wss://dn-server.darknacho.software/sensor/arduino_ws_no_token"
     async with websockets.connect(uri) as websocket:
@@ -24,7 +30,7 @@ async def main():
                     timestamp_epoch=int(datetime.utcnow().timestamp()),
                     timestamp_millis=random.randint(0, 999),
                     value=random.uniform(30, 38),
-                    patient_id="5",
+                    patient_id="7",
                     encounter_id="110",
                 )
                 json_data = arduino_data.model_dump_json()

@@ -34,7 +34,7 @@ arduino_clients = set()
 dashboard_clients = defaultdict(list)
 data_buffer = defaultdict(list)
 
-last_sent_time = time.time()
+
 db_dependency = Annotated[Session, Depends(get_session)]
 
 HAPI_FHIR_URL = os.getenv("HAPI_FHIR_URL")
@@ -97,7 +97,7 @@ async def arduino_websocket(websocket: WebSocket, token: str, db: db_dependency)
     # await websocket.accept()
     arduino_clients.add(websocket)
     print(f"Arduino connected: {websocket.client.host}")
-    global last_sent_time
+    last_sent_time = time.time()
 
     try:
         while True:
@@ -111,7 +111,7 @@ async def arduino_websocket(websocket: WebSocket, token: str, db: db_dependency)
                     sensor_data
                 )
 
-                # db.add(sensor_data)
+                db.add(sensor_data)
 
                 if time.time() - last_sent_time >= 1:
                     for dashboard_client in dashboard_clients[
@@ -128,11 +128,13 @@ async def arduino_websocket(websocket: WebSocket, token: str, db: db_dependency)
                 print(f"Validation error for SensorData: {data}")
                 continue
     except asyncio.CancelledError:
+        print("Cancelled error")
         pass
     except WebSocketDisconnect:
+        print("Websocket disconnected")
         pass
     finally:
-        # db.commit()
+        db.commit()
         arduino_clients.remove(websocket)
         print(f"Arduino disconnected: {websocket.client.host}")
 
