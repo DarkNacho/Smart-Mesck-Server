@@ -62,7 +62,7 @@ async def generate_patient_report(
     patient_id: str,
     token: isAuthorizedToken,  # type: ignore
     db: db_dependency,
-    obs: bool = Query(False, description="Include observations"),
+    clinic: bool = Query(False, description="Include ClinicalImpression (Evolución)"),
     med: bool = Query(False, description="Include medications"),
     cond: bool = Query(False, description="Include conditions"),
     sensor: bool = Query(False, description="Include sensor data"),
@@ -84,7 +84,7 @@ async def generate_patient_report(
 
         print(f"Fetched patient data: {patient.get('id')}")
 
-        observations_data = []
+        observations_data = None
         medication_data = []
         sensor_data = []
         condition_data = []
@@ -94,7 +94,7 @@ async def generate_patient_report(
         if encounter_id:
             params["encounter"] = encounter_id
 
-        if obs:
+        if clinic:
             # data = await fetch_resources("Observation", params, token)
             # observations_data = [item["resource"] for item in data.get("entry", [])]
 
@@ -105,7 +105,7 @@ async def generate_patient_report(
                 item["resource"] for item in data.get("entry", [])
             ]
             print("data: clinical", data)
-            print(f"Fetched observations/clinicalimpresion data")
+            print(f"Fetched clinicalimpresion data")
 
         if cond:
             data = await fetch_resources("Condition", params, token)

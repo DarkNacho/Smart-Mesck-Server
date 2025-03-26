@@ -13,6 +13,10 @@ from models import SensorData
 import pdfkit
 import tempfile
 from jinja2 import Environment, FileSystemLoader
+import PyPDF2
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+import io
 
 import statistics
 
@@ -54,12 +58,18 @@ def generate_pdf_to_byte_array(html_content):
             options=options,
         )
 
-        # Read the PDF content from the temporary file into a byte array
-        with open(pdf_file_path, "rb") as pdf_file:
+        # Add watermark to the PDF
+        watermarked_pdf_path = add_watermark_to_pdf(
+            pdf_file_path, "report/static/logo.png"
+        )
+
+        # Read the watermarked PDF content into a byte array
+        with open(watermarked_pdf_path, "rb") as pdf_file:
             pdf_content = pdf_file.read()
 
-        # Clean up the temporary file
+        # Clean up the temporary files
         os.remove(pdf_file_path)
+        os.remove(watermarked_pdf_path)
 
         return pdf_content
     except IOError as e:
@@ -67,6 +77,89 @@ def generate_pdf_to_byte_array(html_content):
         # Clean up the temporary file in case of error
         os.remove(pdf_file_path)
         return None
+
+
+def add_watermark_to_pdf(input_pdf_path, watermark_image_path):
+    """
+    Adds an image watermark to every page of the input PDF.
+
+    Args:
+        input_pdf_path (str): Path to the input PDF.
+        watermark_image_path (str): Path to the watermark image.
+
+    Returns:
+        str: Path to the watermarked PDF.
+    """
+    # Create a temporary file for the watermarked PDF
+    with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+        watermarked_pdf_path = tmpfile.name
+
+    # Read the input PDF
+    with open(input_pdf_path, "rb") as input_pdf:
+        pdf_reader = PyPDF2.PdfReader(input_pdf)
+        pdf_writer = PyPDF2.PdfWriter()
+
+        for page in pdf_reader.pages:
+            # Create a watermark PDF with the image
+            watermark_pdf = create_watermark_pdf(
+                watermark_image_path, page.mediabox.width, page.mediabox.height
+            )
+
+            # Merge the watermark with the current page
+            page.merge_page(watermark_pdf.pages[0])
+            pdf_writer.add_page(page)
+
+        # Write the watermarked PDF to the temporary file
+        with open(watermarked_pdf_path, "wb") as output_pdf:
+            pdf_writer.write(output_pdf)
+
+    return watermarked_pdf_path
+
+
+def create_watermark_pdf(image_path, page_width, page_height):
+    """
+    Creates a PDF containing the watermark image with transparency and diagonal positioning.
+
+    Args:
+        image_path (str): Path to the watermark image.
+        page_width (float): Width of the page.
+        page_height (float): Height of the page.
+
+    Returns:
+        PyPDF2.PdfReader: A PDF reader object containing the watermark.
+    """
+    # Convert page dimensions to float in case they are decimal.Decimal
+    page_width = float(page_width)
+    page_height = float(page_height)
+
+    packet = io.BytesIO()
+    can = canvas.Canvas(packet, pagesize=(page_width, page_height))
+
+    # Set transparency
+    can.saveState()
+    can.setFillAlpha(
+        0.2
+    )  # Adjust transparency (0.0 = fully transparent, 1.0 = fully opaque)
+
+    # Rotate the canvas for diagonal positioning
+    can.translate(
+        page_width / 2, page_height / 2
+    )  # Move origin to the center of the page
+    can.rotate(45)  # Rotate 45 degrees (diagonal)
+    can.drawImage(
+        image_path,
+        -page_width / 2,
+        -page_height / 2,
+        width=page_width,
+        height=page_height,
+        mask="auto",
+    )
+
+    can.restoreState()
+    can.save()
+
+    packet.seek(0)
+    return PyPDF2.PdfReader(packet)
 
 
 def parse_patient_info(patient):
