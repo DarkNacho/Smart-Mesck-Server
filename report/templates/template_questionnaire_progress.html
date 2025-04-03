@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            border: 2px solid black;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+        }
+
+        .charts img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>{{ title }}</h1>
+
+        <h2>Progress Data</h2>
+        <table>
+            <tr>
+                <th>Question</th>
+                <th>Dates</th>
+                <th>Scores</th>
+                <th>Answers</th>
+            </tr>
+            {% for question_text, data in progress_data.items() %}
+            <tr>
+                <td>{{ question_text }}</td>
+                <td>{{ data.dates | join(", ") }}</td>
+                <td>{{ data.scores | join(", ") }}</td>
+                <td>{{ data.answers | join(", ") }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <h2>Total Scores</h2>
+        <table>
+            <tr>
+                <th>Date</th>
+                <th>Total Score</th>
+            </tr>
+            {% for entry in total_scores %}
+            <tr>
+                <td>{{ entry.date }}</td>
+                <td>{{ entry.score }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <h2>Charts</h2>
+        {% for chart in charts %}
+        <img src="{{ chart }}" alt="Chart">
+        {% endfor %}
+    </div>
+</body>
+
+</html>

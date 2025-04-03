@@ -3,7 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlmodel import Session
-from typing import Annotated, List, Optional
+from typing import Annotated, List, Literal, Optional
 import io
 
 from auth import isAuthorized as Authorized, isAuthorizedToken as AuthorizedToken
@@ -17,6 +17,9 @@ from report.report_utils import (
     fetch_resources,
     parse_patient_info,
     get_sensor_data_by_patient,
+    get_sensor_data_by_patient_and_sensor,
+    get_historical_sensor_summary_by_patient,
+    get_sensor_progress_over_time,
 )
 
 
@@ -387,3 +390,71 @@ async def get_sensor_data_by_patient_endpoint(
     return await get_sensor_data_by_patient(
         patient_id, db, encounter_id, min_time, max_time, excluded_sensor_types
     )
+
+
+@router.get(
+    "/sensors/{patient_id}/by-sensor",
+    summary="Get Sensor Data by Patient and Sensor",
+    description="Fetch sensor data for a specific patient and sensor type.",
+)
+async def get_sensor_data_by_patient_and_sensor_endpoint(
+    patient_id: str,
+    db: db_dependency,
+    required_sensor_type: str = Query(..., description="The required sensor type."),
+):
+    try:
+        return await get_sensor_data_by_patient_and_sensor(
+            patient_id=patient_id,
+            db=db,
+            required_sensor_type=required_sensor_type,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching sensor data: {str(e)}"
+        )
+
+
+@router.get(
+    "/sensors/{patient_id}/summary",
+    summary="Get Historical Sensor Summary",
+    description="Fetch a historical summary of sensor data for a specific patient.",
+)
+async def get_historical_sensor_summary_by_patient_endpoint(
+    patient_id: str,
+    db: db_dependency,
+):
+    try:
+        return await get_historical_sensor_summary_by_patient(
+            patient_id=patient_id,
+            db=db,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fetching historical sensor summary: {str(e)}",
+        )
+
+
+@router.get(
+    "/sensors/{patient_id}/progress",
+    summary="Get Sensor Progress Over Time",
+    description="Fetch the progress of sensor data over time for a specific patient.",
+)
+async def get_sensor_progress_over_time_endpoint(
+    patient_id: str,
+    db: db_dependency,
+    time_grouping: Literal["day", "week", "month"] = Query(
+        "week",
+        description="Time grouping for progress (e.g., 'day', 'week', 'month').",
+    ),
+):
+    try:
+        return await get_sensor_progress_over_time(
+            patient_id=patient_id,
+            db=db,
+            time_grouping=time_grouping,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching sensor progress: {str(e)}"
+        )
