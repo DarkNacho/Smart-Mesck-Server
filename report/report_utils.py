@@ -171,7 +171,7 @@ def create_watermark_pdf(image_path, page_width, page_height):
     # Set transparency
     can.saveState()
     can.setFillAlpha(
-        0.2
+        0.1
     )  # Adjust transparency (0.0 = fully transparent, 1.0 = fully opaque)
 
     # Check if the image is too small; if so, repeat it with rotation
