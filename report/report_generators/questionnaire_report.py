@@ -1,4 +1,6 @@
 from collections import defaultdict
+
+import numpy as np
 from report.report_utils import render_template
 import matplotlib.pyplot as plt
 import base64
@@ -202,13 +204,16 @@ def questionnaire_progress_report(
 
     # Generate charts for progress
     chart_images = []
-    if include_bar_chart:
-        bar_chart_base64 = generate_progress_bar_chart(total_scores, report_title)
+    if include_line_chart:  # Now generates a line chart for total scores
+        line_chart_base64 = generate_total_scores_line_chart(total_scores, report_title)
+        chart_images.append(line_chart_base64)
+
+    if include_bar_chart:  # Now generates bar charts for question responses
+        bar_chart_base64 = generate_questions_bar_chart(progress_data, report_title)
         chart_images.append(bar_chart_base64)
 
-    if include_line_chart:
-        line_chart_base64 = generate_progress_line_chart(progress_data, report_title)
-        chart_images.append(line_chart_base64)
+    line_chart_base64 = generate_questions_line_chart(progress_data, report_title)
+    chart_images.append(line_chart_base64)
 
     # Render the report using a template
     context = {
@@ -301,9 +306,13 @@ def generate_line_chart_base64(question_texts, question_scores, report_title):
     return f"data:image/png;base64,{base64_image}"
 
 
-def generate_progress_bar_chart(total_scores, report_title):
+def generate_total_scores_line_chart(total_scores, report_title):
     """
-    Generates a bar chart for total scores over time and returns it as a Base64 string.
+    Generates a line chart for total scores over time and returns it as a Base64 string.
+
+    Args:
+        total_scores (list): List of dictionaries containing date and score
+        report_title (str): Title of the report
 
     Returns:
         str: The Base64-encoded image.
@@ -312,11 +321,12 @@ def generate_progress_bar_chart(total_scores, report_title):
     scores = [entry["score"] for entry in total_scores]
 
     plt.figure(figsize=(10, 6))
-    plt.bar(dates, scores, color="skyblue")
+    plt.plot(dates, scores, marker="o", linestyle="-", color="green")
     plt.xlabel("Dates")
     plt.ylabel("Total Scores")
     plt.title(f"Total Scores Over Time for {report_title}")
     plt.xticks(rotation=45, ha="right")
+    plt.grid(True, linestyle="--", alpha=0.7)
     plt.tight_layout()
 
     # Save the chart to a BytesIO object
@@ -330,25 +340,131 @@ def generate_progress_bar_chart(total_scores, report_title):
     return f"data:image/png;base64,{base64_image}"
 
 
-def generate_progress_line_chart(progress_data, report_title):
+def generate_questions_bar_chart(progress_data, report_title):
     """
-    Generates a line chart for question progress over time and returns it as a Base64 string.
+    Generates grouped bar charts for question responses over time.
+
+    Args:
+        progress_data (dict): Dictionary containing question progress data
+        report_title (str): Title of the report
 
     Returns:
         str: The Base64-encoded image.
     """
     plt.figure(figsize=(12, 8))
 
-    for link_id, data in progress_data.items():
-        dates = data["dates"]
-        scores = data["scores"]
-        plt.plot(dates, scores, marker="o", label=f"Question {link_id}")
+    # For simplicity, we'll take the first few questions if there are many
+    questions = list(progress_data.keys())
+    if len(questions) > 5:
+        questions = questions[:5]  # Limit to first 5 questions for readability
 
-    plt.xlabel("Dates")
+    x = np.arange(len(questions))
+    width = 0.8 / len(progress_data[questions[0]]["dates"])
+
+    # Get unique dates across all questions
+    all_dates = []
+    for question in questions:
+        all_dates.extend(progress_data[question]["dates"])
+    unique_dates = sorted(set(all_dates))
+
+    # Create bar groups for each date
+    for i, date in enumerate(unique_dates[:5]):  # Limit to first 5 dates if many
+        scores_for_date = []
+        for question in questions:
+            # Find the score for this date if it exists
+            date_idx = None
+            try:
+                date_idx = progress_data[question]["dates"].index(date)
+                scores_for_date.append(progress_data[question]["scores"][date_idx])
+            except ValueError:
+                scores_for_date.append(0)  # No data for this question on this date
+
+        plt.bar(x + i * width, scores_for_date, width, label=date)
+
+    plt.xlabel("Questions")
     plt.ylabel("Scores")
-    plt.title(f"Question Progress Over Time for {report_title}")
+    plt.title(f"Question Responses Over Time for {report_title}")
+    plt.xticks(
+        x + width / 2,
+        [q[:20] + "..." if len(q) > 20 else q for q in questions],
+        rotation=45,
+        ha="right",
+    )
     plt.legend()
+    plt.tight_layout()
+
+    # Save the chart to a BytesIO object
+    buffer = io.BytesIO()
+    plt.savefig(buffer, format="png")
+    plt.close()
+    buffer.seek(0)
+
+    # Encode the image as Base64
+    base64_image = base64.b64encode(buffer.read()).decode("utf-8")
+    return f"data:image/png;base64,{base64_image}"
+
+
+def generate_questions_line_chart(progress_data, report_title):
+    """
+    Generates a line chart for question responses over time with questions on the X-axis.
+
+    Args:
+        progress_data (dict): Dictionary containing question progress data
+        report_title (str): Title of the report
+
+    Returns:
+        str: The Base64-encoded image.
+    """
+    plt.figure(figsize=(12, 8))
+
+    # For simplicity, we'll take the first few questions if there are many
+    questions = list(progress_data.keys())
+    if len(questions) > 5:
+        questions = questions[:5]  # Limit to first 5 questions for readability
+
+    # Get shortened question labels for the x-axis
+    question_labels = [q[:20] + "..." if len(q) > 20 else q for q in questions]
+
+    # Get unique dates across all questions
+    all_dates = []
+    for question in questions:
+        all_dates.extend(progress_data[question]["dates"])
+    unique_dates = sorted(set(all_dates))
+
+    # Limit to first 5 dates if many
+    if len(unique_dates) > 5:
+        unique_dates = unique_dates[:5]
+
+    # For each date, plot a line across questions
+    for date in unique_dates:
+        scores_for_date = []
+
+        # Get the score for each question on this date
+        for question in questions:
+            try:
+                date_idx = progress_data[question]["dates"].index(date)
+                scores_for_date.append(progress_data[question]["scores"][date_idx])
+            except ValueError:
+                scores_for_date.append(None)  # No data for this question on this date
+
+        # Filter out None values
+        valid_indices = [
+            i for i, score in enumerate(scores_for_date) if score is not None
+        ]
+        if valid_indices:
+            valid_questions = [question_labels[i] for i in valid_indices]
+            valid_scores = [scores_for_date[i] for i in valid_indices]
+
+            plt.plot(
+                valid_questions, valid_scores, marker="o", linestyle="-", label=date
+            )
+
+    plt.xlabel("Questions")
+    plt.ylabel("Scores")
+    plt.title(f"Question Responses Over Time for {report_title}")
     plt.xticks(rotation=45, ha="right")
+    plt.grid(True, linestyle="--", alpha=0.7)
+    plt.legend(loc="best", title="Dates")
     plt.tight_layout()
 
     # Save the chart to a BytesIO object
