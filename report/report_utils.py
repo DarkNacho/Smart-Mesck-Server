@@ -55,6 +55,10 @@ def generate_pdf_to_byte_array(html_content, add_watermark=True):
         "enable-local-file-access": "",
         "header-html": "report/templates/header.html",
         "footer-html": "report/templates/footer.html",
+        "footer-right": "Página [page] de [topage]",  # Add pagination in footer right
+        "footer-font-size": "9",
+        "footer-line": True,  # Add a line above the footer
+        "margin-bottom": "20mm",
     }
     # Create a temporary file
     with tempfile.NamedTemporaryFile(delete=False) as tmpfile:

@@ -375,6 +375,102 @@ async def generate_questionnaire_report(
 
 
 @router.get(
+    "/questionnaire/{patient_id}/progress/{questionnaire_id}",
+    summary="Generate a questionnaire progress report",
+    description="Generates a progress report for all responses of a specific questionnaire for a patient",
+)
+async def generate_questionnaire_progress_report(
+    patient_id: str,
+    questionnaire_id: str,
+    token: isAuthorizedToken,  # type: ignore
+    db: db_dependency,
+    include_bar_chart: bool = Query(
+        True, description="Include bar chart in the report"
+    ),
+    include_line_chart: bool = Query(
+        True, description="Include line chart in the report"
+    ),
+):
+    try:
+        # Fetch the questionnaire
+        questionnaire = await fetch_resource("Questionnaire", questionnaire_id, token)
+        if not questionnaire:
+            raise HTTPException(status_code=404, detail="Questionnaire not found")
+
+        # Fetch all QuestionnaireResponses for the given patient
+        # (solo usamos el filtro de patient porque el filtro combinado no funciona)
+        params = {
+            "patient": patient_id,
+        }
+
+        data = await fetch_resources("QuestionnaireResponse", params, token)
+        all_responses = [item["resource"] for item in data.get("entry", [])]
+
+        if not all_responses:
+            raise HTTPException(
+                status_code=404,
+                detail="No QuestionnaireResponses found for this patient",
+            )
+
+        # Filtrar manualmente por questionnaire_id
+        questionnaire_responses = []
+        questionnaire_reference = f"Questionnaire/{questionnaire_id}"
+
+        for response in all_responses:
+            response_questionnaire = response.get("questionnaire", "")
+            # Algunos sistemas usan URLs completas, otros solo usan referencias relativas
+            if (questionnaire_reference in response_questionnaire) or (
+                response_questionnaire.endswith(questionnaire_id)
+            ):
+                questionnaire_responses.append(response)
+
+        if not questionnaire_responses:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No QuestionnaireResponses found for questionnaire {questionnaire_id}",
+            )
+
+        # Generate the progress report
+        from report.report_generators.questionnaire_report import (
+            questionnaire_progress_report,
+        )
+
+        html_data = questionnaire_progress_report(
+            questionnaire=questionnaire,
+            questionnaire_responses=questionnaire_responses,
+            include_bar_chart=include_bar_chart,
+            include_line_chart=include_line_chart,
+        )
+
+        pdf_file = generate_pdf_to_byte_array(html_data)
+
+        # Get patient info for filename
+        patient = await fetch_resource("Patient", patient_id, token)
+        patient_info = parse_patient_info(patient)
+        patient_name = patient_info.get("Name", "patient").replace(" ", "_")
+        patient_rut = patient_info.get("RUT", "")
+
+        questionnaire_name = questionnaire.get("title", "questionnaire").replace(
+            " ", "_"
+        )
+
+        return StreamingResponse(
+            io.BytesIO(pdf_file),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={patient_rut}_{patient_name}_{questionnaire_name}_progress_report.pdf"
+            },
+        )
+    except Exception as e:
+        print(
+            f"Error generating questionnaire progress report for patient {patient_id} and questionnaire {questionnaire_id}: {e}"
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error al generar el reporte: {str(e)}"
+        )
+
+
+@router.get(
     "/data/{patient_id}",
     summary="Get Sensor Data by Patient",
     description="Get sensor data for a patient based on various parameters.",
