@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -13,9 +13,6 @@ from database import get_session
 
 
 from report.report_utils import (
-    fetch_resource,
-    fetch_resources,
-    parse_patient_info,
     get_sensor_data_by_patient,
     get_sensor_data_by_patient_and_sensor,
     get_historical_sensor_summary_by_patient,
@@ -33,11 +30,10 @@ import io
 from auth import isAuthorized as Authorized, isAuthorizedToken as AuthorizedToken
 from database import get_session
 from report.report_utils import (
-    fetch_resource,
-    fetch_resources,
     generate_pdf_to_byte_array,
     get_sensor_data_by_patient,
 )
+from utils import fetch_resource, fetch_resources, parse_patient_info
 from report.report_generators.general_report import general_report
 from report.report_generators.patient_report import patient_report
 from report.report_generators.observation_report import observation_report
@@ -518,11 +514,17 @@ async def get_sensor_data_by_patient_and_sensor_endpoint(
 async def get_historical_sensor_summary_by_patient_endpoint(
     patient_id: str,
     db: db_dependency,
+    days: Optional[int] = Query(
+        7, description="Number of days to look back from today"
+    ),
 ):
     try:
+        today = datetime.now()
         return await get_historical_sensor_summary_by_patient(
             patient_id=patient_id,
             db=db,
+            max_time=today,
+            min_time=today - timedelta(days=days),
         )
     except Exception as e:
         raise HTTPException(

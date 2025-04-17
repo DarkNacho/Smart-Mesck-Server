@@ -1,5 +1,5 @@
 from datetime import datetime
-from report.report_utils import parse_patient_info
+from utils import parse_patient_info
 from report.report_utils import render_template
 from dateutil.parser import isoparse
 import os

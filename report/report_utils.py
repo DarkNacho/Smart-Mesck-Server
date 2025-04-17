@@ -221,125 +221,6 @@ def create_watermark_pdf(image_path, page_width, page_height):
     return PyPDF2.PdfReader(packet)
 
 
-def parse_patient_info(patient):
-    # Initialize an empty dictionary to hold the parsed information
-    parsed_info = {}
-
-    # Extract and add basic information
-    parsed_info["ID"] = patient.get("id", "N/A")
-
-    identifier = patient.get("identifier", [])
-    for iden in identifier:
-        if iden["system"] == "RUT":
-            parsed_info["RUT"] = iden.get("value", "N/A")
-    parsed_info["Name"] = " ".join(
-        patient.get("name", [{}])[0].get("given", [])
-        + [patient.get("name", [{}])[0].get("family", "")]
-    )
-    parsed_info["Gender"] = patient.get("gender", "N/A")
-    parsed_info["BirthDate"] = patient.get("birthDate", "N/A")
-
-    # Extract and add contact information
-    telecoms = patient.get("telecom", [])
-    for telecom in telecoms:
-        if telecom["system"] == "phone":
-            parsed_info["Phone"] = telecom.get("value", "N/A")
-        elif telecom["system"] == "email":
-            parsed_info["Email"] = telecom.get("value", "N/A")
-
-    # Extract and add marital status
-    marital_status = (
-        patient.get("maritalStatus", {}).get("coding", [{}])[0].get("display", "N/A")
-    )
-    parsed_info["Marital Status"] = marital_status
-
-    # Extract and add general practitioner information
-    practitioners = patient.get("generalPractitioner", [])
-    parsed_info["General Practitioners"] = [
-        practitioner.get("reference", "N/A") for practitioner in practitioners
-    ]
-
-    return parsed_info
-
-
-async def fetch_resource(resource_type: str, resource_id: str, token: str) -> dict:
-    """
-    Fetch a resource from the HAPI FHIR server.
-
-    Args:
-        resource_type (str): The type of the resource (e.g., "Patient").
-        resource_id (str): The ID of the resource.
-        token (str): Authorization token.
-
-    Returns:
-        dict: The fetched resource.
-
-    Raises:
-        HTTPException: If the resource cannot be fetched.
-    """
-    if not HAPI_FHIR_URL:
-        raise HTTPException(status_code=500, detail="HAPI_FHIR_URL is not configured")
-
-    url = f"{HAPI_FHIR_URL}/{resource_type}/{resource_id}"
-    headers = {"Authorization": f"Bearer {token}"}
-
-    print(f"Fetching {url}")
-
-    async with httpx.AsyncClient(timeout=50.0) as client:
-        response = await client.get(url, headers=headers)
-
-    if response.status_code != 200:
-        response_data = response.json()
-        diagnostic_message = "Failed to fetch {url}\n"
-        diagnostic_message += response_data.get("issue", [{}])[0].get(
-            "diagnostics", "Unknown error"
-        )
-        raise HTTPException(status_code=response.status_code, detail=diagnostic_message)
-
-    return response.json()
-
-
-async def fetch_resources(
-    resource_type: str,
-    params: dict,
-    token: str,
-) -> dict:
-    """
-    Fetch a resource from the HAPI FHIR server.
-
-    Args:
-        resource_type (str): The type of the resource (e.g., "Patient").
-        resource_id (str): The ID of the resource.
-        token (str): Authorization token.
-
-    Returns:
-        dict: The fetched resource.
-
-    Raises:
-        HTTPException: If the resource cannot be fetched.
-    """
-    if not HAPI_FHIR_URL:
-        raise HTTPException(status_code=500, detail="HAPI_FHIR_URL is not configured")
-
-    url = f"{HAPI_FHIR_URL}/{resource_type}"
-    headers = {"Authorization": f"Bearer {token}"}
-
-    print(f"Fetching {url} with params: {params}")
-
-    async with httpx.AsyncClient(timeout=50.0, params=params) as client:
-        response = await client.get(url, headers=headers)
-
-    if response.status_code != 200:
-        response_data = response.json()
-        diagnostic_message = f"Failed to fetch {url}\n"
-        diagnostic_message += response_data.get("issue", [{}])[0].get(
-            "diagnostics", "Unknown error"
-        )
-        raise HTTPException(status_code=response.status_code, detail=diagnostic_message)
-
-    return response.json()
-
-
 async def get_sensor_data(
     patient_id: str,
     db: db_dependency,
@@ -579,13 +460,18 @@ async def get_sensor_data_by_patient_and_sensor(
 async def get_historical_sensor_summary_by_patient(
     patient_id: str,
     db,
+    min_time: Optional[datetime] = None,
+    max_time: Optional[datetime] = None,
 ):
     """
     Obtiene un resumen histórico general de los valores más relevantes de cada sensor para un paciente.
+    Opcionalmente filtra por un rango de fechas.
 
     Args:
         patient_id (str): El ID del paciente.
         db: La sesión de la base de datos.
+        min_time (Optional[datetime]): Fecha mínima para filtrar los datos (inclusive).
+        max_time (Optional[datetime]): Fecha máxima para filtrar los datos (inclusive).
 
     Returns:
         dict: Resumen de los valores más relevantes por sensor.
@@ -600,6 +486,15 @@ async def get_historical_sensor_summary_by_patient(
         func.percentile_cont(0.5).within_group(SensorData.value).label("median_value"),
         func.count(SensorData.value).label("count"),
     ).filter(SensorData.patient_id == patient_id)
+
+    # Aplicar filtros de tiempo si se proporcionan
+    if min_time:
+        min_timestamp = int(min_time.timestamp())
+        query = query.filter(SensorData.timestamp_epoch >= min_timestamp)
+
+    if max_time:
+        max_timestamp = int(max_time.timestamp())
+        query = query.filter(SensorData.timestamp_epoch <= max_timestamp)
 
     # Agrupar por tipo de sensor
     query = query.group_by(SensorData.sensor_type)

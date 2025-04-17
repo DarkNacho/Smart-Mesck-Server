@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 from typing import Annotated, Dict, List
 from fastapi import (
@@ -32,7 +32,7 @@ from auth import isAuthorized
 from database import get_session
 from jwt import generate_token_with_payload as generate_token
 from auth import validate_resource_fhir
-
+from utils import create_resource, get_fhir_id
 
 load_dotenv()
 
@@ -72,7 +72,11 @@ def items_to_send(sensor_data_list, n=1):
 
 @router.websocket("/arduino_ws")
 async def arduino_websocket(
-    websocket: WebSocket, token: str, db: db_dependency, encounter_id: str = None
+    websocket: WebSocket,
+    token: str,
+    db: db_dependency,
+    encounter_id: str = None,
+    rut: str = None,
 ):
     try:
         print("Connecting to websocket...")
@@ -81,15 +85,66 @@ async def arduino_websocket(
         print("payload:", payload)
         print("token:", token)
         await websocket.accept()
+        if rut:
+            print("fetching id for Rut:", rut)
+            try:
+                response_patient = get_fhir_id(rut, db)
+                print("response_patient:", response_patient)
+                fhir_id = response_patient.get("fhir_id")
+                if fhir_id:
+                    print(f"FHIR ID for patient_rut {rut}: {fhir_id}")
+                    await websocket.send_text(f"fhir_id: {fhir_id}")
+                    # Use the found fhir_id as the patient_id
+                    patient_id = fhir_id
+                else:
+                    print(f"No user found with RUT: {rut}")
+                    await websocket.send_text(f"error: No user found with RUT {rut}")
+            except Exception as e:
+                print(f"Error fetching FHIR ID for RUT {rut}: {str(e)}")
+                await websocket.send_text(f"error: {str(e)}")
 
-        if encounter_id:
-            print("Encounter ID:", encounter_id)
-
-            # payload["encounter_id"] = encounter_id
-        else:
+        if not encounter_id:
             print("No encounter ID, creating new encounter...")
-            encounter_id = "XXXX"
-            await websocket.send_text(f"encounter_id: {encounter_id}")
+
+            encounter_template = {
+                "resourceType": "Encounter",
+                "status": "in-progress",
+                "subject": {
+                    "reference": f"Patient/{patient_id}",
+                    "display": payload.get("name"),
+                },
+                "period": {
+                    "start": datetime.now(timezone.utc).isoformat(),
+                    "end": None,
+                },
+                "type": [
+                    {
+                        "coding": [
+                            {
+                                "system": "CTTN",
+                                "code": "SENSOR-MONITOR",
+                                "display": "Sensor Monitoring Encounter",
+                            }
+                        ]
+                    }
+                ],
+            }
+
+            try:
+                print("Attempting to create encounter resource...")
+                response_encounter = await create_resource(
+                    "Encounter", encounter_template, token
+                )
+                encounter_id = response_encounter.get("id")
+                print("Encounter created:", response_encounter)
+                print("Encounter ID:", encounter_id)
+                await websocket.send_text(f"encounter_id: {encounter_id}")
+            except Exception as e:
+                print(f"Failed to create encounter: {str(e)}")
+                # Use a temporary ID so the connection can continue
+                encounter_id = f"temp_{patient_id}_{int(time.time())}"
+                await websocket.send_text(f"encounter_id: {encounter_id}")
+                await websocket.send_text(f"encounter_creation_error: {str(e)}")
 
     except JWTError:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
@@ -120,6 +175,11 @@ async def arduino_websocket(
     try:
         while True:
             data = await websocket.receive_text()
+            if data == "stay alive":
+                continue
+            if data == "ping":
+                await websocket.send_text("pong")
+                continue
 
             try:
                 sensor_data = SensorData.model_validate_json(data)
