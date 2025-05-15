@@ -1,3 +1,4 @@
+from calendar import monthrange
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -52,6 +53,36 @@ isAuthorized = Annotated[Authorized, Depends(Authorized)]
 isAuthorizedToken = Annotated[AuthorizedToken, Depends(AuthorizedToken)]
 
 
+# Lógica compartida para calcular los filtros de fecha
+def build_date_params(
+    resource_type: str, start: Optional[datetime], end: Optional[datetime]
+):
+    date_fields = {
+        "Condition": "recorded-date",
+        "MedicationStatement": "effective",
+        "ClinicalImpression": "date",
+    }
+
+    date_params = {}
+    date_field = date_fields.get(resource_type)
+    if not date_field:
+        return date_params
+    if start:
+        date_params[date_field] = f"ge{start.isoformat()}"
+    if end:
+        # Si ya existe una entrada 'ge', entonces necesitamos pasar ambos como lista
+        if date_field in date_params:
+            date_params = {
+                date_field: [
+                    date_params[date_field],  # ya tenía el ge
+                    f"le{end.isoformat()}",
+                ]
+            }
+        else:
+            date_params[date_field] = f"le{end.isoformat()}"
+    return date_params
+
+
 @router.get(
     "/{patient_id}",
     summary="Generate a patient report",
@@ -75,6 +106,11 @@ async def generate_patient_report(
     end: Optional[datetime] = Query(
         None, description="Maximum time in ISO format (e.g., 2023-10-02T12:00:00.000Z)"
     ),
+    date_filter: Optional[str] = Query(
+        "all",
+        description="Filtrado de fechas: 'session', 'week', 'month', 'all', 'range'",
+        regex="^(session|week|month|all|range)$",
+    ),
 ):
     try:
         print(f"Generating report for patient_id: {patient_id}")
@@ -90,15 +126,37 @@ async def generate_patient_report(
         clinical_impression_data = []
 
         params = {"patient": patient_id}
+
+        now = datetime.now()
+        if date_filter == "week":
+            start = now - timedelta(days=7)
+            end = now
+        elif date_filter == "month":
+            # Primer día del mes actual
+            start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            # Último día del mes actual
+            last_day = monthrange(now.year, now.month)[1]
+            end = now.replace(
+                day=last_day, hour=23, minute=59, second=59, microsecond=999999
+            )
+        elif date_filter == "all" or date_filter == "session":
+            start = None
+            end = None
+        elif date_filter == "range":
+            # Usa los valores de start y end proporcionados por el usuario
+            pass
+
+        date_params = {}
+
         if encounter_id:
             params["encounter"] = encounter_id
 
         if clinic:
             # data = await fetch_resources("Observation", params, token)
             # observations_data = [item["resource"] for item in data.get("entry", [])]
-
+            date_params = build_date_params("ClinicalImpression", start, end)
             data = await fetch_resources(
-                "ClinicalImpression", {"patient": patient_id}, token
+                "ClinicalImpression", {"patient": patient_id, **date_params}, token
             )
             clinical_impression_data = [
                 item["resource"] for item in data.get("entry", [])
@@ -107,7 +165,8 @@ async def generate_patient_report(
             print(f"Fetched clinicalimpresion data")
 
         if cond:
-            data = await fetch_resources("Condition", params, token)
+            date_params = build_date_params("Condition", start, end)
+            data = await fetch_resources("Condition", {**params, **date_params}, token)
             condition_data = [item["resource"] for item in data.get("entry", [])]
             print(f"Fetched condition data")
 
@@ -120,7 +179,10 @@ async def generate_patient_report(
             print(f"Fetched sensor data, length: {len(sensor_data)}")
 
         if med and not encounter_id:
-            data = await fetch_resources("MedicationStatement", params, token)
+            date_params = build_date_params("MedicationStatement", start, end)
+            data = await fetch_resources(
+                "MedicationStatement", {**params, **date_params}, token
+            )
             medication_data = [item["resource"] for item in data.get("entry", [])]
             print(f"Fetched medication data: {medication_data}")
 

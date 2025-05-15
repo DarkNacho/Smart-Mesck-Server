@@ -17,7 +17,7 @@ async def send_without_response(websocket, json_data):
 
 
 async def main():
-    uri = "ws://alaya.cttn.cl:8088/sensor2/arduino_ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkYXJrX25hY2hvX3hkQGhvdG1haWwuY2wiLCJpZCI6IjEiLCJuYW1lIjoiSWduYWNpbyBNYXJ0XHUwMGVkbmV6Iiwicm9sZSI6IkFkbWluIiwiZXhwIjoxNzQ0OTI1ODA0LjIyODcwNjZ9.Q1XkP4Ule8roRQec3sapEyTtIs-1Hez1ZYvFI64S0oE"
+    uri = "ws://alaya.cttn.cl:8088/sensor2/arduino_ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkYXJrX25hY2hvX3hkQGhvdG1haWwuY2wiLCJpZCI6IjEiLCJyb2xlIjoiQWRtaW4iLCJuYW1lIjoiSWduYWNpbyBNYXJ0XHUwMGVkbmV6IiwiZXhwIjoxNzc2NDgwMDQ2Ljk1MjA4OH0.oTx9C2nC3Vf9Ql-dzARV7IlFgokkEGVeWDN9LT-dL1k"
 
     print("Connecting to server...")
     async with websockets.connect(uri) as websocket:
@@ -54,7 +54,7 @@ async def main():
                 current_time = datetime.now(UTC)
                 timestamp_epoch = int(current_time.timestamp())
                 timestamp_millis = random.randint(0, 999)
-                patient_id = "7"  # ID del paciente
+                patient_id = "262"  # ID del paciente
 
                 # Crear datos para cada sensor
                 # 1. SpO2

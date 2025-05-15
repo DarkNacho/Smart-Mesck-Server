@@ -5,6 +5,7 @@ from report.report_utils import render_template
 import matplotlib.pyplot as plt
 import base64
 import io
+from dateutil.parser import isoparse
 
 
 def questionnaire_report(
@@ -57,6 +58,7 @@ def questionnaire_report(
             answer_display = answer.get("valueCoding", {}).get("display")
             answer_integer = answer.get("valueInteger")
             answer_string = answer.get("valueString")
+            answer_decimal = answer.get("valueDecimal")
 
             # Determine the answer to display
             if answer_display:
@@ -65,6 +67,8 @@ def questionnaire_report(
                 answer_text = str(answer_integer)
             elif answer_string:
                 answer_text = answer_string
+            elif answer_decimal is not None:
+                answer_text = str(answer_decimal)
             else:
                 answer_text = "No answer provided"
 
@@ -152,6 +156,15 @@ def questionnaire_progress_report(
 
     for response in questionnaire_responses:
         response_date = response.get("authored", "Unknown Date")
+
+        try:
+            fecha_objeto = isoparse(response_date)
+            fecha_formateada = fecha_objeto.strftime("%Y-%m-%d %H:%M:%S")
+        except Exception:
+            fecha_formateada = response_date  # fallback if parsing fails
+
+        response_date = fecha_formateada
+
         responses = {item["linkId"]: item for item in response.get("item", [])}
 
         total_score = 0
@@ -167,6 +180,7 @@ def questionnaire_progress_report(
                 answer_display = answer.get("valueCoding", {}).get("display")
                 answer_integer = answer.get("valueInteger")
                 answer_string = answer.get("valueString")
+                answer_decimal = answer.get("valueDecimal")
 
                 # Determine the answer to display
                 if answer_display:
@@ -175,6 +189,8 @@ def questionnaire_progress_report(
                     answer_text = str(answer_integer)
                 elif answer_string:
                     answer_text = answer_string
+                elif answer_decimal is not None:
+                    answer_text = str(answer_decimal)
                 else:
                     answer_text = "No answer provided"
 

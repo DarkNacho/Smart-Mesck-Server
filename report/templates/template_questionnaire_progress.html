@@ -65,9 +65,9 @@
             {% for question_text, data in progress_data.items() %}
             <tr>
                 <td>{{ question_text }}</td>
-                <td>{{ data.dates | join(", ") }}</td>
-                <td>{{ data.scores | join(", ") }}</td>
-                <td>{{ data.answers | join(", ") }}</td>
+                <td>{{ data.dates | join("<br>") | safe }}</td>
+                <td>{{ data.scores | join("<br>") | safe }}</td>
+                <td>{{ data.answers | join("<br>") | safe }}</td>
             </tr>
             {% endfor %}
         </table>

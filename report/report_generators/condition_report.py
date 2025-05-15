@@ -13,9 +13,10 @@ def condition_report(condition_data_array):
     # html = ""
 
     for condition_data in condition_data_array:
+        print(condition_data)
         # Convertir la cadena de fecha a un objeto datetime
         fecha_objeto = isoparse(
-            condition_data.get("meta", {}).get("lastUpdated", "1900-01-01T00:00:00")
+            condition_data.get("recordedDate", "1900-01-01T00:00:00")
         )
         fecha_formateada = fecha_objeto.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -36,7 +37,7 @@ def condition_report(condition_data_array):
             #    "style": "Normal",
             # },
             {
-                "name": "Última Actualización",
+                "name": "Fecha de Registro",
                 "value": fecha_formateada,
                 "style": "Normal",
             },
