@@ -53,6 +53,14 @@
 <body>
     <div class="container">
         <h1>{{ title }}</h1>
+        {% set ns = namespace(show_answers=false) %}
+        {% for question_text, data in progress_data.items() %}
+        {% set scores_str = data.scores | map('string') | list %}
+        {% set answers_str = data.answers | map('string') | list %}
+        {% if scores_str != answers_str %}
+        {% set ns.show_answers = true %}
+        {% endif %}
+        {% endfor %}
 
         <h2>Progress Data</h2>
         <table>
@@ -60,14 +68,26 @@
                 <th>Question</th>
                 <th>Dates</th>
                 <th>Scores</th>
+                {% if ns.show_answers %}
                 <th>Answers</th>
+                {% endif %}
             </tr>
             {% for question_text, data in progress_data.items() %}
             <tr>
                 <td>{{ question_text }}</td>
                 <td>{{ data.dates | join("<br>") | safe }}</td>
+                {% set scores_str = data.scores | map('string') | list %}
+                {% set answers_str = data.answers | map('string') | list %}
                 <td>{{ data.scores | join("<br>") | safe }}</td>
-                <td>{{ data.answers | join("<br>") | safe }}</td>
+                {% if ns.show_answers %}
+                <td>
+                    {% if scores_str == answers_str %}
+                    <!-- Empty cell if answers are the same as scores -->
+                    {% else %}
+                    {{ data.answers | join("<br>") | safe }}
+                    {% endif %}
+                </td>
+                {% endif %}
             </tr>
             {% endfor %}
         </table>

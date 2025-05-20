@@ -166,7 +166,11 @@ async def login(db: db_dependency, form_data: OAuth2PasswordRequestForm = Depend
     # user = db.query(User).filter(User.email == form_data.username).first()
     if not user or not bcrypt_context.verify(form_data.password, user.hash_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    return {"access_token": create_access_token(user), "token_type": "bearer"}
+    return {
+        "access_token": create_access_token(user),
+        "token_type": "bearer",
+        "exp": time.time() + (ACCESS_TOKEN_EXPIRE_MINUTES - 1) * 60,
+    }
 
 
 @router.get("/activate/{token}")

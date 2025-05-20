@@ -168,6 +168,7 @@ def questionnaire_progress_report(
         responses = {item["linkId"]: item for item in response.get("item", [])}
 
         total_score = 0
+        include_in_score_custom = 0
         for link_id, question in questions.items():
             question_text = question.get("text", "N/A")
             question_type = question.get("type", "N/A")
@@ -206,17 +207,43 @@ def questionnaire_progress_report(
                 # Add ordinal value to the total score if applicable
                 if ordinal_value is not None:
                     total_score += ordinal_value
+                    score_value = ordinal_value
                 elif answer_integer is not None:
                     total_score += answer_integer
+                    score_value = answer_integer
+                elif answer_decimal is not None:
+                    total_score += answer_decimal
+                    score_value = answer_decimal
+                else:
+                    score_value = 0
+
+                for code in question.get("code", []):
+                    if code.get("system") == "include_in_score":
+                        print(
+                            f"Question {question_text} with code {code.get('code')} included in score."
+                        )
+                        include_in_score_custom += score_value
+                        break
 
                 # Store progress data
                 progress_data[question_text]["dates"].append(response_date)
-                progress_data[question_text]["scores"].append(
-                    ordinal_value if ordinal_value is not None else answer_integer or 0
-                )
+                # progress_data[question_text]["scores"].append(
+                #    ordinal_value if ordinal_value is not None else answer_integer or 0
+                # )
+                progress_data[question_text]["scores"].append(score_value)
+
                 progress_data[question_text]["answers"].append(answer_text)
 
-        total_scores.append({"date": response_date, "score": total_score})
+        total_scores.append(
+            {
+                "date": response_date,
+                "score": (
+                    total_score
+                    if include_in_score_custom == 0
+                    else include_in_score_custom
+                ),
+            }
+        )
 
     # Generate charts for progress
     chart_images = []

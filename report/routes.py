@@ -528,6 +528,94 @@ async def generate_questionnaire_progress_report(
         )
 
 
+import zipfile
+from fastapi.responses import StreamingResponse
+import tempfile
+
+
+@router.get(
+    "/questionnaire/{patient_id}/progress-all",
+    summary="Generate a single PDF progress report for all questionnaires answered by a patient",
+    description="Generates a single PDF progress report for all questionnaires the patient has answered.",
+)
+async def generate_all_questionnaire_progress_reports(
+    patient_id: str,
+    token: isAuthorizedToken,  # type: ignore
+    db: db_dependency,
+    include_bar_chart: bool = Query(
+        True, description="Include bar chart in the report"
+    ),
+    include_line_chart: bool = Query(
+        True, description="Include line chart in the report"
+    ),
+):
+    try:
+        # Fetch all QuestionnaireResponses for the patient
+        params = {"patient": patient_id}
+        data = await fetch_resources("QuestionnaireResponse", params, token)
+        all_responses = [item["resource"] for item in data.get("entry", [])]
+
+        if not all_responses:
+            raise HTTPException(
+                status_code=404,
+                detail="No QuestionnaireResponses found for this patient",
+            )
+
+        # Group responses by questionnaire
+        from collections import defaultdict
+
+        grouped = defaultdict(list)
+        for resp in all_responses:
+            qid = resp.get("questionnaire", "")
+            # Normalize to just the id
+            if "/" in qid:
+                qid = qid.split("/")[-1]
+            grouped[qid].append(resp)
+
+        # Prepare patient info for filenames
+        patient = await fetch_resource("Patient", patient_id, token)
+        patient_info = parse_patient_info(patient)
+        patient_name = patient_info.get("Name", "patient").replace(" ", "_")
+        patient_rut = patient_info.get("RUT", "")
+
+        # Concatenate all HTML reports
+        all_html = ""
+        from report.report_generators.questionnaire_report import (
+            questionnaire_progress_report,
+        )
+
+        for qid, responses in grouped.items():
+            questionnaire = await fetch_resource("Questionnaire", qid, token)
+            if not questionnaire:
+                continue
+            html_data = questionnaire_progress_report(
+                questionnaire=questionnaire,
+                questionnaire_responses=responses,
+                include_bar_chart=include_bar_chart,
+                include_line_chart=include_line_chart,
+            )
+            # Add a page break between reports (if your PDF generator supports it)
+            all_html += html_data + '<div style="page-break-after:always"></div>'
+
+        # Generate a single PDF from the concatenated HTML
+        pdf_file = generate_pdf_to_byte_array(all_html)
+
+        return StreamingResponse(
+            io.BytesIO(pdf_file),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={patient_rut}_{patient_name}_all_questionnaire_progress_report.pdf"
+            },
+        )
+    except Exception as e:
+        print(
+            f"Error generating all questionnaire progress reports for patient {patient_id}: {e}"
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Error al generar los reportes: {str(e)}"
+        )
+
+
 @router.get(
     "/data/{patient_id}",
     summary="Get Sensor Data by Patient",
