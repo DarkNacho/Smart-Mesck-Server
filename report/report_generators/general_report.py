@@ -1,3 +1,6 @@
+from report.report_generators.questionnaire_report import (
+    generate_all_questionnaire_progress_html,
+)
 from report.report_utils import render_template
 from dateutil.parser import isoparse
 
@@ -12,13 +15,15 @@ from report.report_generators.medication_report import medication_report
 from report.report_generators.sensor_report import sensor_report
 
 
-def general_report(
+async def general_report(
     patient_data,
     clinical_impression_data_array=None,
     condition_data_array=None,
     observation_data_array=None,
     medication_data_array=None,
     sensor_data=None,
+    questionnaire_data=None,
+    token=None,
 ):
 
     html_data = patient_report(patient_data)
@@ -51,5 +56,11 @@ def general_report(
         print("generating sensor report")
         html_data += sensor_report(sensor_data)
         # story.extend(sensor_story)
+
+    if questionnaire_data is not None:
+        print("generating questionnaire progress report")
+        html_data += await generate_all_questionnaire_progress_html(
+            questionnaire_data, token, True, True
+        )
 
     return generate_pdf_to_byte_array(html_data)

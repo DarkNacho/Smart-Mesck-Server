@@ -1,11 +1,13 @@
 from collections import defaultdict
 
 import numpy as np
-from report.report_utils import render_template
+from report.report_utils import fetch_and_group_questionnaire_responses, render_template
 import matplotlib.pyplot as plt
 import base64
 import io
 from dateutil.parser import isoparse
+
+from utils import fetch_resource
 
 
 def questionnaire_report(
@@ -253,10 +255,10 @@ def questionnaire_progress_report(
 
     if include_bar_chart:  # Now generates bar charts for question responses
         bar_chart_base64 = generate_questions_bar_chart(progress_data, report_title)
-        chart_images.append(bar_chart_base64)
+        chart_images.extend(bar_chart_base64)
 
     line_chart_base64 = generate_questions_line_chart(progress_data, report_title)
-    chart_images.append(line_chart_base64)
+    chart_images.extend(line_chart_base64)
 
     # Render the report using a template
     context = {
@@ -383,139 +385,143 @@ def generate_total_scores_line_chart(total_scores, report_title):
     return f"data:image/png;base64,{base64_image}"
 
 
+def chunk_list(lst, n):
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]
+
+
 def generate_questions_bar_chart(progress_data, report_title):
     """
     Generates grouped bar charts for question responses over time.
-
-    Args:
-        progress_data (dict): Dictionary containing question progress data
-        report_title (str): Title of the report
-
-    Returns:
-        str: The Base64-encoded image.
+    Returns a list of Base64-encoded images (one per chunk of questions).
     """
-    plt.figure(figsize=(12, 8))
-
-    # For simplicity, we'll take the first few questions if there are many
+    charts = []
     questions = list(progress_data.keys())
-    if len(questions) > 5:
-        questions = questions[:5]  # Limit to first 5 questions for readability
+    max_per_chart = 5
 
-    x = np.arange(len(questions))
-    width = 0.8 / len(progress_data[questions[0]]["dates"])
+    for chunk_idx, chunk in enumerate(chunk_list(questions, max_per_chart)):
+        plt.figure(figsize=(12, 8))
+        x = np.arange(len(chunk))
+        width = 0.8 / max(1, len(progress_data[chunk[0]]["dates"]))
 
-    # Get unique dates across all questions
-    all_dates = []
-    for question in questions:
-        all_dates.extend(progress_data[question]["dates"])
-    unique_dates = sorted(set(all_dates))
+        # Get unique dates across all questions in this chunk
+        all_dates = []
+        for question in chunk:
+            all_dates.extend(progress_data[question]["dates"])
+        unique_dates = sorted(set(all_dates))
 
-    # Create bar groups for each date
-    for i, date in enumerate(unique_dates[:5]):  # Limit to first 5 dates if many
-        scores_for_date = []
-        for question in questions:
-            # Find the score for this date if it exists
-            date_idx = None
-            try:
-                date_idx = progress_data[question]["dates"].index(date)
-                scores_for_date.append(progress_data[question]["scores"][date_idx])
-            except ValueError:
-                scores_for_date.append(0)  # No data for this question on this date
+        # Create bar groups for each date
+        for i, date in enumerate(unique_dates[:5]):  # Limit to first 5 dates if many
+            scores_for_date = []
+            for question in chunk:
+                try:
+                    date_idx = progress_data[question]["dates"].index(date)
+                    scores_for_date.append(progress_data[question]["scores"][date_idx])
+                except ValueError:
+                    scores_for_date.append(0)
+            plt.bar(x + i * width, scores_for_date, width, label=date)
 
-        plt.bar(x + i * width, scores_for_date, width, label=date)
+        plt.xlabel("Questions")
+        plt.ylabel("Scores")
+        plt.title(
+            f"Question Responses Over Time for {report_title} (Part {chunk_idx+1})"
+        )
+        plt.xticks(
+            x + width / 2,
+            [q[:20] + "..." if len(q) > 20 else q for q in chunk],
+            rotation=45,
+            ha="right",
+        )
+        plt.legend()
+        plt.tight_layout()
 
-    plt.xlabel("Questions")
-    plt.ylabel("Scores")
-    plt.title(f"Question Responses Over Time for {report_title}")
-    plt.xticks(
-        x + width / 2,
-        [q[:20] + "..." if len(q) > 20 else q for q in questions],
-        rotation=45,
-        ha="right",
-    )
-    plt.legend()
-    plt.tight_layout()
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format="png")
+        plt.close()
+        buffer.seek(0)
+        base64_image = base64.b64encode(buffer.read()).decode("utf-8")
+        charts.append(f"data:image/png;base64,{base64_image}")
 
-    # Save the chart to a BytesIO object
-    buffer = io.BytesIO()
-    plt.savefig(buffer, format="png")
-    plt.close()
-    buffer.seek(0)
-
-    # Encode the image as Base64
-    base64_image = base64.b64encode(buffer.read()).decode("utf-8")
-    return f"data:image/png;base64,{base64_image}"
+    return charts
 
 
 def generate_questions_line_chart(progress_data, report_title):
     """
-    Generates a line chart for question responses over time with questions on the X-axis.
-
-    Args:
-        progress_data (dict): Dictionary containing question progress data
-        report_title (str): Title of the report
-
-    Returns:
-        str: The Base64-encoded image.
+    Generates line charts for question responses over time with questions on the X-axis.
+    Returns a list of Base64-encoded images (one per chunk of questions).
     """
-    plt.figure(figsize=(12, 8))
-
-    # For simplicity, we'll take the first few questions if there are many
+    charts = []
     questions = list(progress_data.keys())
-    if len(questions) > 5:
-        questions = questions[:5]  # Limit to first 5 questions for readability
+    max_per_chart = 5
 
-    # Get shortened question labels for the x-axis
-    question_labels = [q[:20] + "..." if len(q) > 20 else q for q in questions]
+    for chunk_idx, chunk in enumerate(chunk_list(questions, max_per_chart)):
+        plt.figure(figsize=(12, 8))
+        question_labels = [q[:20] + "..." if len(q) > 20 else q for q in chunk]
 
-    # Get unique dates across all questions
-    all_dates = []
-    for question in questions:
-        all_dates.extend(progress_data[question]["dates"])
-    unique_dates = sorted(set(all_dates))
+        # Get unique dates across all questions in this chunk
+        all_dates = []
+        for question in chunk:
+            all_dates.extend(progress_data[question]["dates"])
+        unique_dates = sorted(set(all_dates))
+        if len(unique_dates) > 5:
+            unique_dates = unique_dates[:5]
 
-    # Limit to first 5 dates if many
-    if len(unique_dates) > 5:
-        unique_dates = unique_dates[:5]
+        for date in unique_dates:
+            scores_for_date = []
+            for question in chunk:
+                try:
+                    date_idx = progress_data[question]["dates"].index(date)
+                    scores_for_date.append(progress_data[question]["scores"][date_idx])
+                except ValueError:
+                    scores_for_date.append(None)
+            valid_indices = [
+                i for i, score in enumerate(scores_for_date) if score is not None
+            ]
+            if valid_indices:
+                valid_questions = [question_labels[i] for i in valid_indices]
+                valid_scores = [scores_for_date[i] for i in valid_indices]
+                plt.plot(
+                    valid_questions, valid_scores, marker="o", linestyle="-", label=date
+                )
 
-    # For each date, plot a line across questions
-    for date in unique_dates:
-        scores_for_date = []
+        plt.xlabel("Questions")
+        plt.ylabel("Scores")
+        plt.title(
+            f"Question Responses Over Time for {report_title} (Part {chunk_idx+1})"
+        )
+        plt.xticks(rotation=45, ha="right")
+        plt.grid(True, linestyle="--", alpha=0.7)
+        plt.legend(loc="best", title="Dates")
+        plt.tight_layout()
 
-        # Get the score for each question on this date
-        for question in questions:
-            try:
-                date_idx = progress_data[question]["dates"].index(date)
-                scores_for_date.append(progress_data[question]["scores"][date_idx])
-            except ValueError:
-                scores_for_date.append(None)  # No data for this question on this date
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format="png")
+        plt.close()
+        buffer.seek(0)
+        base64_image = base64.b64encode(buffer.read()).decode("utf-8")
+        charts.append(f"data:image/png;base64,{base64_image}")
 
-        # Filter out None values
-        valid_indices = [
-            i for i, score in enumerate(scores_for_date) if score is not None
-        ]
-        if valid_indices:
-            valid_questions = [question_labels[i] for i in valid_indices]
-            valid_scores = [scores_for_date[i] for i in valid_indices]
+    return charts
 
-            plt.plot(
-                valid_questions, valid_scores, marker="o", linestyle="-", label=date
-            )
 
-    plt.xlabel("Questions")
-    plt.ylabel("Scores")
-    plt.title(f"Question Responses Over Time for {report_title}")
-    plt.xticks(rotation=45, ha="right")
-    plt.grid(True, linestyle="--", alpha=0.7)
-    plt.legend(loc="best", title="Dates")
-    plt.tight_layout()
+async def generate_all_questionnaire_progress_html(
+    data,
+    token,
+    include_bar_chart=True,
+    include_line_chart=True,
+):
 
-    # Save the chart to a BytesIO object
-    buffer = io.BytesIO()
-    plt.savefig(buffer, format="png")
-    plt.close()
-    buffer.seek(0)
-
-    # Encode the image as Base64
-    base64_image = base64.b64encode(buffer.read()).decode("utf-8")
-    return f"data:image/png;base64,{base64_image}"
+    # grouped = await fetch_and_group_questionnaire_responses(patient_id, token, params)
+    all_html = ""
+    for qid, responses in data.items():
+        questionnaire = await fetch_resource("Questionnaire", qid, token)
+        if not questionnaire:
+            continue
+        html_data = questionnaire_progress_report(
+            questionnaire=questionnaire,
+            questionnaire_responses=responses,
+            include_bar_chart=include_bar_chart,
+            include_line_chart=include_line_chart,
+        )
+        all_html += html_data + '<div style="page-break-after:always"></div>'
+    return all_html

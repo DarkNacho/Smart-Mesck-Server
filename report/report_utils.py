@@ -20,6 +20,8 @@ import io
 
 import statistics
 
+from utils import fetch_resource, fetch_resources
+
 
 HAPI_FHIR_URL = os.getenv("HAPI_FHIR_URL")
 
@@ -588,3 +590,15 @@ async def get_sensor_progress_over_time(
         progress_results[sensor_type]["median_values"].append(record.median_value)
 
     return progress_results
+
+
+async def fetch_and_group_questionnaire_responses(params, token):
+    data = await fetch_resources("QuestionnaireResponse", params, token)
+    all_responses = [item["resource"] for item in data.get("entry", [])]
+    grouped = defaultdict(list)
+    for resp in all_responses:
+        qid = resp.get("questionnaire", "")
+        if "/" in qid:
+            qid = qid.split("/")[-1]
+        grouped[qid].append(resp)
+    return grouped

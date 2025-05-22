@@ -14,6 +14,7 @@ from database import get_session
 
 
 from report.report_utils import (
+    fetch_and_group_questionnaire_responses,
     get_sensor_data_by_patient,
     get_sensor_data_by_patient_and_sensor,
     get_historical_sensor_summary_by_patient,
@@ -41,7 +42,10 @@ from report.report_generators.observation_report import observation_report
 from report.report_generators.medication_report import medication_report
 from report.report_generators.condition_report import condition_report
 from report.report_generators.sensor_report import sensor_report
-from report.report_generators.questionnaire_report import questionnaire_report
+from report.report_generators.questionnaire_report import (
+    generate_all_questionnaire_progress_html,
+    questionnaire_report,
+)
 
 
 from report.report_generators.general_report import general_report
@@ -61,8 +65,9 @@ def build_date_params(
         "Condition": "recorded-date",
         "MedicationStatement": "effective",
         "ClinicalImpression": "date",
+        "QuestionnaireResponse": "authored",
     }
-
+    print(f"build_date_params: {resource_type}, start: {start}, end: {end}")
     date_params = {}
     date_field = date_fields.get(resource_type)
     if not date_field:
@@ -80,6 +85,8 @@ def build_date_params(
             }
         else:
             date_params[date_field] = f"le{end.isoformat()}"
+
+    print(f"date_params for {resource_type}: {date_params}")
     return date_params
 
 
@@ -95,6 +102,9 @@ async def generate_patient_report(
     clinic: bool = Query(False, description="Include ClinicalImpression (Evolución)"),
     med: bool = Query(False, description="Include medications"),
     cond: bool = Query(False, description="Include conditions"),
+    questionnaire: bool = Query(
+        False, description="Include questionnaire progress report"
+    ),
     sensor: bool = Query(False, description="Include sensor data"),
     excluded_sensor_types: Optional[List[str]] = Query(
         None, description="Excluded sensor types"
@@ -113,6 +123,9 @@ async def generate_patient_report(
     ),
 ):
     try:
+        print(
+            f"params: {patient_id=}, {clinic=}, {med=}, {cond=}, {questionnaire=}, {sensor=}, {excluded_sensor_types=}, {encounter_id=}, {start=}, {end=}, {date_filter=}"
+        )
         print(f"Generating report for patient_id: {patient_id}")
 
         patient = await fetch_resource("Patient", patient_id, token)
@@ -124,6 +137,7 @@ async def generate_patient_report(
         sensor_data = []
         condition_data = []
         clinical_impression_data = []
+        questionnaire_data = None
 
         params = {"patient": patient_id}
 
@@ -186,13 +200,26 @@ async def generate_patient_report(
             medication_data = [item["resource"] for item in data.get("entry", [])]
             print(f"Fetched medication data: {medication_data}")
 
-        pdf_file = general_report(
+        if questionnaire:
+            date_params = build_date_params("QuestionnaireResponse", start, end)
+            dasdas = {**params, **date_params}
+            print(f"params={dasdas}")
+            print(f"date_params for questionnaire={date_params}")
+            questionnaire_data = await fetch_and_group_questionnaire_responses(
+                params={**params, **date_params}, token=token
+            )
+
+            print(f"Fetched questionnaire progress data")
+
+        pdf_file = await general_report(
             patient_data=patient,
             clinical_impression_data_array=clinical_impression_data,
             observation_data_array=observations_data,
             sensor_data=sensor_data,
             medication_data_array=medication_data,
             condition_data_array=condition_data,
+            questionnaire_data=questionnaire_data,
+            token=token,
         )
 
         print("Generated PDF report")
