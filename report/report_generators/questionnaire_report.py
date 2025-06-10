@@ -1,4 +1,5 @@
 from collections import defaultdict
+import os
 
 import numpy as np
 from report.report_utils import fetch_and_group_questionnaire_responses, render_template
@@ -236,7 +237,7 @@ def questionnaire_progress_report(
 
                 progress_data[question_text]["answers"].append(answer_text)
 
-        total_scores.append(
+        """total_scores.append(
             {
                 "date": response_date,
                 "score": (
@@ -245,7 +246,11 @@ def questionnaire_progress_report(
                     else include_in_score_custom
                 ),
             }
-        )
+        )"""
+        if include_in_score_custom > 0:  # Solo agregar si hay puntaje personalizado
+            total_scores.append(
+                {"date": response_date, "score": include_in_score_custom}
+            )
 
     # Generate charts for progress
     chart_images = []
@@ -257,8 +262,9 @@ def questionnaire_progress_report(
         bar_chart_base64 = generate_questions_bar_chart(progress_data, report_title)
         chart_images.extend(bar_chart_base64)
 
-    line_chart_base64 = generate_questions_line_chart(progress_data, report_title)
-    chart_images.extend(line_chart_base64)
+    if include_line_chart:  # Now generates line charts for question responses
+        line_chart_base64 = generate_questions_line_chart(progress_data, report_title)
+        chart_images.extend(line_chart_base64)
 
     # Render the report using a template
     context = {
@@ -512,7 +518,14 @@ async def generate_all_questionnaire_progress_html(
 ):
 
     # grouped = await fetch_and_group_questionnaire_responses(patient_id, token, params)
-    all_html = ""
+
+    context_title = {
+        "title": "Reporte de Evaluaciones Clínicas",
+        "img_path": os.path.abspath("report/static/icon_med.png"),
+    }
+
+    all_html = render_template("template_title.html", context_title)
+
     for qid, responses in data.items():
         questionnaire = await fetch_resource("Questionnaire", qid, token)
         if not questionnaire:

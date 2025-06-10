@@ -24,6 +24,8 @@ async def general_report(
     sensor_data=None,
     questionnaire_data=None,
     token=None,
+    include_bar_chart=True,
+    include_line_chart=True,
 ):
 
     html_data = patient_report(patient_data)
@@ -60,7 +62,7 @@ async def general_report(
     if questionnaire_data is not None:
         print("generating questionnaire progress report")
         html_data += await generate_all_questionnaire_progress_html(
-            questionnaire_data, token, True, True
+            questionnaire_data, token, include_bar_chart, include_line_chart
         )
 
     return generate_pdf_to_byte_array(html_data)

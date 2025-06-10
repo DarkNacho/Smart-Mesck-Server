@@ -63,35 +63,43 @@
         {% endfor %}
 
         <h2>Progress Data</h2>
+        <!-- Agrupar por fecha -->
+        {% set date_map = {} %}
+        {% for question, data in progress_data.items() %}
+        {% for date in data.dates %}
+        {% set idx = loop.index0 %}
+        {% set _ = date_map.setdefault(date, []).append({
+        'question': question,
+        'score': data.scores[idx],
+        'answer': data.answers[idx] if data.answers else None
+        }) %}
+        {% endfor %}
+        {% endfor %}
+
+        {% for date in date_map|dictsort %}
+        <h3>Fecha: {{ date[0] }}</h3>
         <table>
             <tr>
-                <th>Question</th>
-                <th>Dates</th>
-                <th>Scores</th>
+                <th>Pregunta</th>
+                <th>Score</th>
                 {% if ns.show_answers %}
-                <th>Answers</th>
+                <th>Respuesta</th>
                 {% endif %}
             </tr>
-            {% for question_text, data in progress_data.items() %}
+            {% for entry in date[1] %}
             <tr>
-                <td>{{ question_text }}</td>
-                <td>{{ data.dates | join("<br>") | safe }}</td>
-                {% set scores_str = data.scores | map('string') | list %}
-                {% set answers_str = data.answers | map('string') | list %}
-                <td>{{ data.scores | join("<br>") | safe }}</td>
-                {% if ns.show_answers %}
-                <td>
-                    {% if scores_str == answers_str %}
-                    <!-- Empty cell if answers are the same as scores -->
-                    {% else %}
-                    {{ data.answers | join("<br>") | safe }}
-                    {% endif %}
-                </td>
+                <td>{{ entry.question }}</td>
+                <td>{{ entry.score }}</td>
+                {% if entry.answer is not none and ns.show_answers %}
+                <td>{{ entry.answer }}</td>
                 {% endif %}
             </tr>
             {% endfor %}
         </table>
+        {% endfor %}
 
+        <!-- Solo mostrar la sección si hay datos -->
+        {% if total_scores %}
         <h2>Total Scores</h2>
         <table>
             <tr>
@@ -105,6 +113,7 @@
             </tr>
             {% endfor %}
         </table>
+        {% endif %}
 
         <h2>Charts</h2>
         {% for chart in charts %}

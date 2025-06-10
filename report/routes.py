@@ -121,6 +121,12 @@ async def generate_patient_report(
         description="Filtrado de fechas: 'session', 'week', 'month', 'all', 'range'",
         regex="^(session|week|month|all|range)$",
     ),
+    include_bar_chart: Optional[bool] = Query(
+        True, description="Include bar chart in the report"
+    ),
+    include_line_chart: Optional[bool] = Query(
+        True, description="Include line chart in the report"
+    ),
 ):
     try:
         print(
@@ -202,8 +208,6 @@ async def generate_patient_report(
 
         if questionnaire:
             date_params = build_date_params("QuestionnaireResponse", start, end)
-            dasdas = {**params, **date_params}
-            print(f"params={dasdas}")
             print(f"date_params for questionnaire={date_params}")
             questionnaire_data = await fetch_and_group_questionnaire_responses(
                 params={**params, **date_params}, token=token
@@ -220,6 +224,8 @@ async def generate_patient_report(
             condition_data_array=condition_data,
             questionnaire_data=questionnaire_data,
             token=token,
+            include_bar_chart=include_bar_chart,
+            include_line_chart=include_line_chart,
         )
 
         print("Generated PDF report")
