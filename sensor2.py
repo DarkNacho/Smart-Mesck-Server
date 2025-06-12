@@ -156,6 +156,7 @@ async def arduino_websocket(
         return
 
     # await websocket.accept()
+    data_buffer.clear()  # Clear the data buffer for this connection
     arduino_clients.add(websocket)
     patients_to_monitor.add(patient_id)
 
@@ -353,8 +354,8 @@ async def get_sensor_data(encounter_id: str, db: db_dependency):
     sensor_data = (
         db.query(SensorData).filter(SensorData.encounter_id == encounter_id).all()
     )
-    return sample_by_sensor_type(sensor_data, 5)
-    # return sensor_data
+    # return sample_by_sensor_type(sensor_data, 5)
+    return sensor_data
 
 
 def uniform_sample(
