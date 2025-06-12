@@ -55,12 +55,28 @@
         <h1>{{ title }}</h1>
         {% set ns = namespace(show_answers=false) %}
         {% for question_text, data in progress_data.items() %}
-        {% set scores_str = data.scores | map('string') | list %}
-        {% set answers_str = data.answers | map('string') | list %}
-        {% if scores_str != answers_str %}
-        {% set ns.show_answers = true %}
+        {# Solo procesar si aún no hemos decidido mostrar las respuestas #}
+        {% if not ns.show_answers %}
+        {% set scores_list_str = data.scores | map('string') | list %}
+
+        {# Crear una nueva lista para las respuestas donde "No answer provided" se reemplaza por "0" #}
+        {% set modified_answers_list_str = [] %}
+        {% for ans in data.answers %} {# Iterar sobre las respuestas originales #}
+        {% set current_ans_str = ans | string %}
+        {% if current_ans_str == "No answer provided" %}
+        {% set _ = modified_answers_list_str.append("0") %}
+        {% else %}
+        {% set _ = modified_answers_list_str.append(current_ans_str) %}
         {% endif %}
         {% endfor %}
+
+        {# Comparar la lista de scores con la lista de respuestas modificada #}
+        {% if scores_list_str != modified_answers_list_str %}
+        {% set ns.show_answers = true %}
+        {% endif %}
+        {% endif %}
+        {% endfor %}
+
 
         <h2>Progress Data</h2>
         <!-- Agrupar por fecha -->
@@ -115,7 +131,6 @@
         </table>
         {% endif %}
 
-        <h2>Charts</h2>
         {% for chart in charts %}
         <img src="{{ chart }}" alt="Chart">
         {% endfor %}

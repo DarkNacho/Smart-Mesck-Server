@@ -130,6 +130,33 @@ def questionnaire_report(
     return html
 
 
+def extract_all_responses(items):
+    all_responses = {}
+    for item in items:
+        if "item" in item:
+            # Procesar recursivamente los ítems anidados
+            nested_responses = extract_all_responses(item.get("item", []))
+            all_responses.update(nested_responses)
+        if "linkId" in item:
+            # Es una respuesta individual
+            all_responses[item["linkId"]] = item
+    return all_responses
+
+
+# Función auxiliar para extraer todas las preguntas, incluidas las anidadas
+def extract_all_questions(items):
+    all_questions = {}
+    for item in items:
+        if item.get("type") == "group":
+            # Procesar recursivamente los ítems del grupo
+            nested_questions = extract_all_questions(item.get("item", []))
+            all_questions.update(nested_questions)
+        else:
+            # Es una pregunta individual
+            all_questions[item["linkId"]] = item
+    return all_questions
+
+
 def questionnaire_progress_report(
     questionnaire,
     questionnaire_responses,
@@ -151,7 +178,10 @@ def questionnaire_progress_report(
     report_title = questionnaire.get("title", "N/A")
 
     # Map the questions
-    questions = {item["linkId"]: item for item in questionnaire.get("item", [])}
+
+    # questions = {item["linkId"]: item for item in questionnaire.get("item", [])}
+    # Obtener todas las preguntas, incluidas las anidadas
+    questions = extract_all_questions(questionnaire.get("item", []))
 
     # Prepare data for comparison
     progress_data = defaultdict(lambda: {"dates": [], "scores": [], "answers": []})
@@ -168,7 +198,8 @@ def questionnaire_progress_report(
 
         response_date = fecha_formateada
 
-        responses = {item["linkId"]: item for item in response.get("item", [])}
+        # responses = {item["linkId"]: item for item in response.get("item", [])}
+        responses = extract_all_responses(response.get("item", []))
 
         total_score = 0
         include_in_score_custom = 0
@@ -521,7 +552,7 @@ async def generate_all_questionnaire_progress_html(
 
     context_title = {
         "title": "Reporte de Evaluaciones Clínicas",
-        "img_path": os.path.abspath("report/static/icon_med.png"),
+        "img_path": os.path.abspath("report/static/icon_report.png"),
     }
 
     all_html = render_template("template_title.html", context_title)
